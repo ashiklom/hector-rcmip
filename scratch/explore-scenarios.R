@@ -2,33 +2,86 @@ library(tidyverse)
 library(fs)
 library(here)
 
+hc <- hector::newcore(system.file("input", "hector_rcp45.ini", package = "hector"))
+
 conc_file <- here("data-raw", "rcmip-concentrations-annual-means-v1-0-0.csv")
-conc <- read_csv(conc_file)
+conc <- read_csv(conc_file) %>%
+  # Hector only does global
+  # Do this early to save calculations
+  filter(Region == "World")
 
 conc_long <- conc %>%
   pivot_longer(
     matches("[[:digit:]]"),
     names_to = "year",
-    values_to = "value",
+    values_to = "concentration",
     names_ptypes = list(year = numeric())
   ) %>%
-  filter(!is.na(value)) %>%
+  filter(!is.na(concentration)) %>%
   mutate(Variable = str_remove(Variable, "^Atmospheric Concentrations\\|"))
-
-conc_long %>%
-  distinct(Variable) %>%
-  pull()
 
 # CO2, pass directly
 # CH4, special case
 # N2O, special case
 
-chemtab <- read_csv(here("data-raw", "ipcc-ar5-ch8-rf.csv"),
-                    col_types = "ccddd") %>%
-  mutate(molarmass = biogas::molMass(formula))
+# Halocarbons
+hcdat <- halocarbon_data()
+
+conc_halocarbon <- conc_long %>%
+  filter(grepl("Montreal Gases|F-Gases", Variable)) %>%
+  mutate(gas = str_remove(Variable, ".*\\|"))
+  ## left_join(halocarbon_data(), c("gas" = "description"))
+
+halo_nested <- conc_halocarbon %>%
+  select(-Variable) %>%
+  group_by(Model, Scenario, Region, Activity_Id, Mip_Era,
+           Unit, gas) %>%
+  arrange(year, .by_group = TRUE) %>%
+  nest(data = c(year, concentration)) %>%
+  left_join(halocarbon_data(), c("gas" = "description"))
+
+implied_emissions <- function(dat, lifetime, radeff, molarmass, H0 = 0) {
+  stopifnot(c("year", "concentration") %in% names(dat))
+  expfac <- exp(-1 / lifetime)
+  dat %>%
+    dplyr::arrange(year) %>%
+    dplyr::mutate(
+      dH = concentration - lag(concentration, default = concentration[1]) * expfac,
+      dC = dH / (lifetime * (1 - expfac)),
+      E = dC * 0.18 * molarmass
+    )
+}
+
+halo_result <- halo_nested %>%
+  mutate(data = pmap(list(data, lifetime, radeff, molarmass), implied_emissions)) %>%
+  unnest(data)
+
+ggplot(filter(halo_result, Region == "World")) +
+  aes(x = year, y = E, color = interaction(Model, Scenario)) +
+  geom_line() +
+  facet_wrap(vars(gas), scales = "free")
+
+halo_wide <- halo_result %>%
+  ungroup() %>%
+  select(Model:year, E) %>%
+  mutate(gas = sprintf("%s_emissions", gas)) %>%
+  pivot_wider(values_from = "E", names_from = "gas")
+
+result_halocarbon <- conc_halocarbon %>%
+  select(-Variable) %>%
+  arrange(year, .by_group = TRUE) %>%
+  mutate(
+    expfac = lifetime
+    dH = concentration - lag(concentration) * expfac,
+    dC = dH / (tau * (1 - expfac)),
+    E = dC * 0.18 * mm
+  )
+
+
+concdata <- conc_long
 
 # Take HFC125 as an example
-species <- "HFC125"
+component <- "HFC125"
 chemtab_sub <- chemtab %>%
   filter(description == !!species)
 mm <- chemtab_sub$molarmass
@@ -43,20 +96,39 @@ dat <- conc_long %>%
     Scenario == Scenario[1],
     Region == "World"
   )
+
 dat_out <- dat %>%
   arrange(year) %>%
   select(-c(Model:Variable), -Activity_Id) %>%
   mutate(
     ## dT = c(NA, diff(year))
-    dH = value - lag(value) * expfac,
-    dC = dH / (tau * (1 - expfac))
   )
+
 dat_out %>%
-  filter(year > 2200)
-ggplot(dat_out) +
-  aes(x = year, y = dH) +
+  filter(year > 2050)
+
+dat_out
+
+library(hector)
+hc <- newcore(system.file("input", "hector_rcp45.ini", package = "hector"))
+## setvar(hc, dat_out$year, "HFC125_emissions", dat_out$E, "kt/yr")
+run(hc)
+out <- fetchvars(hc, 1745:2300, hector::RF_HFC125())
+
+ggplot(out) +
+  aes(x = year, y = value) +
   geom_line()
 
+emiss_hector <- system.file("input", "emissions", "RCP45_emissions.csv",
+                            package = "hector") %>%
+  read_csv(skip = 3)
+
+ggplot(dat_out) +
+  aes(x = year, y = E) +
+  geom_line(aes(color = "RCMIP")) +
+  geom_line(aes(x = Date, y = HFC125_emissions,
+                color = "Hector"),
+            data = emiss_hector)
 
 # # Halocarbons
 # HFC125, convert to emissions
