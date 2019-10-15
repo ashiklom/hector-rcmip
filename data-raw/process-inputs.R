@@ -36,6 +36,8 @@ rcmip_inputs <- bind_rows(conc_long, emiss_long, rf_long)
 
 rcmip_inputs %>%
   filter(!is.na(value)) %>%
+  # Assuming Hector can only do global
+  filter(Region == "World") %>%
   fst::write_fst(
     here("inst", "rcmip-inputs.fst"),
     compress = 100
