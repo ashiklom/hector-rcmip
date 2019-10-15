@@ -12,6 +12,8 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
     filter(model == Model, scenario == Scenario)
   stopifnot(nrow(inputs) > 0)
 
+  missing_inputs <- c()
+
   base_ini <- system.file("input", paste0("hector_", basedon, ".ini"),
                           package = "hector") %>%
     hectortools::read_ini()
@@ -27,6 +29,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, ffi_emissions)
   } else {
     message("Missing FFI emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "ffi_emissions")
   }
 
   # LUC emissions
@@ -38,6 +41,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, luc_emissions)
   } else {
     message("Missing LUC emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "luc_emissions")
   }
  
   # Albedo change forcing
@@ -60,6 +64,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, SO2_emissions)
   } else {
     message("Missing SO2 emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "SO2_emissions")
   }
 
   # Volcanic forcing
@@ -70,6 +75,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, SV = value)
   } else {
     message("Missing SV. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "SV")
   }
 
   # CH4_emissions
@@ -80,6 +86,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, CH4_emissions = value)
   } else {
     message("Missing CH4 emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "CH4_emissions")
   }
 
   # NOX_emissions
@@ -95,17 +102,19 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
     base_ini$ozone$NOX_emissions <- base_ini$OH$NOX_emissions
   } else {
     message("Missing NOX emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "NOX_emissions")
   }
-  
+
   # CO_emissions
   co_in <- inputs %>%
-    filter(Variable == "CO_emissions")
+    filter(Variable == "Emissions|CO")
   if (nrow(co_in) > 0) {
     base_ini$OH$CO_emissions <- co_in %>%
       select(date = year, CO_emissions = value)
     base_ini$ozone$CO_emissions <- base_ini$OH$CO_emissions
   } else {
     message("Missing CO emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "CO_emissions")
   }
 
   # NMVOC_emissions
@@ -117,6 +126,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
     base_ini$ozone$NMVOC_emissions <- base_ini$OH$NMVOC_emissions
   } else {
     message("Missing NMVOC emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "NMVOC_emissions")
   }
 
   n2on <- biogas::molMass("N2O") / biogas::molMass("N")
@@ -129,9 +139,8 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, N2O_emissions)
   } else {
     message("Missing N2O emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "N2O_emissions")
   }
-
-  udunits2::ud.convert(1, "1000 t", "kg")
 
   # BC emissions
   bc_in <- inputs %>%
@@ -142,6 +151,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, BC_emissions)
   } else {
     message("Missing BC emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "BC_emissions")
   }
 
   # OC emissions
@@ -153,6 +163,60 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
       select(date = year, OC_emissions)
   } else {
     message("Missing OC emissions. Using defaults from: ", basedon)
+    missing_inputs <- c(missing_inputs, "OC_emissions")
   }
 
+  list(ini = base_ini, missing_inputs = missing_inputs)
+
 }
+
+scen2base <- tibble::tribble(
+  ~Scenario, ~basedon,
+  "1pctCO2", "rcp45",
+  "1pctCO2-4xext", "rcp45",
+  "abrupt-0p5xCO2", "rcp45",
+  "abrupt-2xCO2", "rcp45",
+  "abrupt-4xCO2", "rcp45",
+  "esm-pi-cdr-pulse", "rcp45",
+  "esm-pi-CO2pulse", "rcp45",
+  "esm-piControl", "rcp45",
+  "historical-cmip5", "rcp45",
+  "historical-cmip6", "rcp45",
+  "piControl", "rcp45",
+  "rcp26", "rcp26",
+  "rcp45", "rcp45",
+  "rcp60", "rcp60",
+  "rcp85", "rcp85",
+  "ssp119", "rcp26",
+  "ssp126", "rcp26",
+  "ssp245", "rcp45",
+  "ssp370", "rcp45",
+  "ssp370-lowNTCF", "rcp45",
+  "ssp434", "rcp45",
+  "ssp460", "rcp60",
+  "ssp534-over", "rcp45",
+  "ssp585", "rcp85"
+)
+
+rcmip_ini <- rcmip_mods %>%
+  left_join(scen2base, "Scenario") %>%
+  mutate(dat = pmap(list(Model, Scenario, basedon), create_scenario))
+
+bymissing <- rcmip_ini %>%
+  mutate(
+    missing = map(dat, "missing_inputs"),
+    nmissing = map_dbl(missing, length),
+    miss_chr = map_chr(missing, paste, collapse = "|")
+  ) %>%
+  arrange(nmissing)
+
+bymissing %>%
+  select() %>%
+  print(n = Inf)
+
+bymissing %>%
+  filter(nmissing > 0) %>%
+  slice(1) %>%
+  pull(missing)
+
+rcmip_ini %>%
