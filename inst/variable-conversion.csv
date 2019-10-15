@@ -1,0 +1,13 @@
+hector_variable, hector_units, rcmip_variable, rcmip_units, notes
+ffi_emissions, PgC year-1, Emissions|CO2|Fossil and Industrial, Mt CO2 year-1,
+luc_emissions, PgC year-1, Emissions|CO2|AFOLU, Mt CO2 year-1,
+Ftalbedo, W m-2, Radiative Forcing|Anthropogenic|Albedo Change, W m-2,
+SO2_emissions, Gg, Emissions|Sulfur, Mt SO2 year-1,
+SV, W m-2, Radiative Forcing|Natural|Volcanic, W m-2,
+CH4_emissions, Tg CH4 year-1, Emissions|CH4, Mt CH4 year-1,
+NOX_emissions, Tg N year-1, Emissions|NOx, Mt NOx year-1,
+CO_emissions, Tg CO year-1, Emissions|CO, Mt CO year-1,
+NMVOC_emissions, Tg NMVOC year-1, Emissions|VOC year-1, Not sure about this one,
+N2O_emissions, Tg N year-1, Emissions|N2O, kt N2O year-1,
+BC_emissions, Tg year-1, Emissions|BC, Mt BC year-1,
+OC_emissions, Tg year-1, Emissions|OC, Mt OC year-1,
