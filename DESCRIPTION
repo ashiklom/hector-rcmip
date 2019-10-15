@@ -16,4 +16,7 @@ RoxygenNote: 6.1.1
 Imports: 
     biogas,
     readr,
-    dplyr
+    dplyr,
+    fst,
+    here,
+    tibble
