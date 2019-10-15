@@ -16,13 +16,14 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
                           package = "hector") %>%
     hectortools::read_ini()
 
+  co2c <- biogas::molMass("CO2") / biogas::molMass("C")
+
   # Fossil fuel emissions
   ffi_in <- inputs %>%
     filter(Variable == "Emissions|CO2|Fossil and Industrial")
   if (nrow(ffi_in) > 0) {
     base_ini$simpleNbox$ffi_emissions <- ffi_in %>%
-      # TODO: More accurate molar mass
-      mutate(ffi_emissions = udunits2::ud.convert(value / 44, "Mt", "Pg")) %>%
+      mutate(ffi_emissions = udunits2::ud.convert(value / co2c, "Mt", "Pg")) %>%
       select(date = year, ffi_emissions)
   } else {
     message("Missing FFI emissions. Using defaults from: ", basedon)
@@ -33,8 +34,7 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
     filter(Variable == "Emissions|CO2|AFOLU")
   if (nrow(luc_in) > 0) {
     base_ini$simpleNbox$luc_emissions <- luc_in %>%
-      # TODO: More accurate molar mass
-      mutate(luc_emissions = udunits2::ud.convert(value / 44, "Mt", "Pg")) %>%
+      mutate(luc_emissions = udunits2::ud.convert(value / co2c, "Mt", "Pg")) %>%
       select(date = year, luc_emissions)
   } else {
     message("Missing LUC emissions. Using defaults from: ", basedon)
@@ -49,8 +49,6 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
   } else {
     message("Missing Ftalbedo. Using defaults from: ", basedon)
   }
-
-  udunits2::ud.convert(1, "Mt", "Gg")
 
   # SO2 emissions
   so2_in <- inputs %>%
@@ -85,15 +83,76 @@ create_scenario <- function(model, scenario, basedon = "rcp45") {
   }
 
   # NOX_emissions
+  # TODO: Figure out NOX conversion factor
+  nox_mass <- (biogas::molMass("NO2") + biogas::molMass("NO")) / 2
+  nox2n <- nox_mass / biogas::molMass("N")
   nox_in <- inputs %>%
-    filter(Variable == "NOX_emissions")
+    filter(Variable == "Emissions|NOx")
   if (nrow(nox_in) > 0) {
     base_ini$OH$NOX_emissions <- nox_in %>%
-      # TODO: Figure out NOX conversion factor
-      mutate(NOX_emissions = value * 1) %>%
+      mutate(NOX_emissions = value / nox2n) %>%
       select(date = year, NOX_emissions)
+    base_ini$ozone$NOX_emissions <- base_ini$OH$NOX_emissions
   } else {
-    message("Missing Ftalbedo. Using defaults from: ", basedon)
+    message("Missing NOX emissions. Using defaults from: ", basedon)
+  }
+  
+  # CO_emissions
+  co_in <- inputs %>%
+    filter(Variable == "CO_emissions")
+  if (nrow(co_in) > 0) {
+    base_ini$OH$CO_emissions <- co_in %>%
+      select(date = year, CO_emissions = value)
+    base_ini$ozone$CO_emissions <- base_ini$OH$CO_emissions
+  } else {
+    message("Missing CO emissions. Using defaults from: ", basedon)
+  }
+
+  # NMVOC_emissions
+  nmvoc_in <- inputs %>%
+    filter(Variable == "Emissions|VOC")
+  if (nrow(nmvoc_in) > 0) {
+    base_ini$OH$NMVOC_emissions <- nmvoc_in %>%
+      select(date = year, NMVOC_emissions = value)
+    base_ini$ozone$NMVOC_emissions <- base_ini$OH$NMVOC_emissions
+  } else {
+    message("Missing NMVOC emissions. Using defaults from: ", basedon)
+  }
+
+  n2on <- biogas::molMass("N2O") / biogas::molMass("N")
+  # N2O_emissions
+  n2o_in <- inputs %>%
+    filter(Variable == "Emissions|N2O")
+  if (nrow(n2o_in) > 0) {
+    base_ini$N2O$N2O_emissions <- n2o_in %>%
+      mutate(N2O_emissions = udunits2::ud.convert(value / n2on, "1000 t", "Tg")) %>%
+      select(date = year, N2O_emissions)
+  } else {
+    message("Missing N2O emissions. Using defaults from: ", basedon)
+  }
+
+  udunits2::ud.convert(1, "1000 t", "kg")
+
+  # BC emissions
+  bc_in <- inputs %>%
+    filter(Variable == "Emissions|BC")
+  if (nrow(bc_in) > 0) {
+    base_ini$bc$BC_emissions <- bc_in %>%
+      mutate(BC_emissions = udunits2::ud.convert(value, "Mt", "Tg")) %>%
+      select(date = year, BC_emissions)
+  } else {
+    message("Missing BC emissions. Using defaults from: ", basedon)
+  }
+
+  # OC emissions
+  oc_in <- inputs %>%
+    filter(Variable == "Emissions|OC")
+  if (nrow(oc_in) > 0) {
+    base_ini$oc$OC_emissions <- oc_in %>%
+      mutate(OC_emissions = udunits2::ud.convert(value, "Mt", "Tg")) %>%
+      select(date = year, OC_emissions)
+  } else {
+    message("Missing OC emissions. Using defaults from: ", basedon)
   }
 
 }
