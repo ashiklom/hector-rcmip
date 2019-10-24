@@ -4,6 +4,8 @@ library(tidyverse)
 library(hector.rcmip)
 library(hectortools)
 
+dir.create("figures", showWarnings = FALSE)
+
 all_long <- rcmip_inputs()
 
 tier1 <- tribble(
@@ -43,13 +45,6 @@ set_variable <- function(core, input_data, varname) {
   hector_unit <- varconv$hector_udunits
   hector_name <- varconv$hector_variable
   value <- udunits2::ud.convert(invar$value, unit, hector_unit)
-  # HACK: Assume initial value in input applies from start date to t0. Prevents
-  # interpolation errors.
-  ## if (startdate(core) < min(year)) {
-  ##   iyear <- seq(startdate(core), min(year) - 1)
-  ##   year <- c(iyear, year)
-  ##   value <- c(rep(value[1], length(iyear)), value)
-  ## }
   hector::setvar(core, year, hector_name, value, varconv$hector_unit)
   invisible(core)
 }
@@ -58,16 +53,19 @@ run_concentration_scenario <- function(input, scenario, basedon = "rcp45", vars 
   input_sub <- dplyr::filter(input, Scenario == !!scenario)
   stopifnot(nrow(input_sub) > 0)
   dates <- sort(unique(input_sub$year))
+  # HACK: Start at the first value provided by RCMIP, but no earlier than 1765
+  # (because I have no Hector defaults before then)
+  minyear <- max(min(dates), 1765)
+  # HACK: Same as above for the last year
+  maxyear <- min(max(dates), 2300)
   basefile <- system.file("input", paste0("hector_", basedon, ".ini"),
                           package = "hector")
   stopifnot(file.exists(basefile))
   ini <- hectortools::read_ini(basefile)
-  minyear <- max(min(dates), 1765)
-  maxyear <- min(max(dates), 2300)
-  ini$core$startDate <-minyear
+  ini$core$startDate <- minyear
   ini$core$endDate <- maxyear
+  # HACK: This should really be `minyear`, but that doesn't work for some reason
   ini$forcing$baseyear <- minyear + 1
-  str(ini)
   hc <- hectortools::newcore_ini(ini, suppresslogging = TRUE, name = scenario)
   input_vars <- input_sub %>%
     dplyr::distinct(Variable) %>%
@@ -75,10 +73,8 @@ run_concentration_scenario <- function(input, scenario, basedon = "rcp45", vars 
   for (v in input_vars) {
     hc <- tryCatch(
       set_variable(hc, input_sub, v),
-      error = function(e) {
-        message("Failed on variable: ", v)
-        return(hc)
-      }
+      # Skip errors silently
+      error = function(e) return(hc)
     )
   }
   invisible(run(hc))
@@ -96,9 +92,11 @@ tier1_results <- tier1_inputs %>%
   )
 
 tier1_results %>%
-  ## filter(grepl("abrupt", Scenario)) %>%
   unnest(result) %>%
   ggplot() +
   aes(x = year, y = value, color = Scenario) +
   geom_line() +
-  facet_wrap(vars(variable), scales = "free_y")
+  facet_wrap(vars(variable), scales = "free_y") +
+  scale_color_viridis_d() +
+  theme_bw()
+ggsave("figures/rcmip-tier1.png", width = 7, height = 7)
