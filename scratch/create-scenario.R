@@ -218,5 +218,3 @@ bymissing %>%
   filter(nmissing > 0) %>%
   slice(1) %>%
   pull(missing)
-
-rcmip_ini %>%
