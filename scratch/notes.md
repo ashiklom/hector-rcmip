@@ -20,3 +20,8 @@
 - In RCMIP, what is the interpretation of "Mt NOx year-1"? Specifically, how to convert to Tg N for Hector?
 - Is RCMIPs VOC the same as Hector's NMVOC?
 
+## Misc
+
+How to run Hector with abrupt CO2 forcing (from Adria, by way of Kalyn):
+
+> "We ran Hector-doeclim with few changes to the default configuration file settings. We enabled the `[temp_doeclim]` component and the `volcanic_forcing` component. We changed two model time steps in Hector-doeclim: (1) the `carbon-cycle-solver.cpp` time step from `dt(0.3)` to `dt(0.1)` and (2) the `ocean_component.hpp` `OCEAN_MIN_TIMESTEP` from 0.3 to 0.01 to allow for the carbon cycle, in particular the ocean carbon cycle to better respond to these perturbations."
