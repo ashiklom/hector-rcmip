@@ -93,10 +93,12 @@ tier1_results <- tier1_inputs %>%
 
 tier1_results %>%
   unnest(result) %>%
+  filter(year <= 2100) %>%
   ggplot() +
   aes(x = year, y = value, color = Scenario) +
   geom_line() +
   facet_wrap(vars(variable), scales = "free_y") +
-  scale_color_viridis_d() +
+  scale_color_brewer(type = "qual") +
   theme_bw()
+
 ggsave("figures/rcmip-tier1.png", width = 7, height = 7)
