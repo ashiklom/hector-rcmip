@@ -19,4 +19,5 @@ Imports:
     dplyr,
     fst,
     here,
-    tibble
+    tibble,
+    fuzzyjoin

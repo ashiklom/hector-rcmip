@@ -1,17 +1,21 @@
 hector_component, hector_variable, hector_unit, hector_udunits, rcmip_variable, rcmip_units, rcmip_udunits
 simpleNbox, ffi_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|Fossil and Industrial, Mt CO2 year-1, Mt 1/44.01 year-1
+simpleNbox, ffi_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|MAGICC Fossil and Industrial, Mt CO2 year-1, Mt 1/44.01 year-1
 simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|AFOLU, Mt CO2 year-1, Mt 1/44.01 year-1
+simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|MAGICC AFOLU, Mt CO2 year-1, Mt 1/44.01 year-1
+simpleNbox, Ca_constrain, ppm, ppm, Atmospheric Concentrations|CO2, ppm, ppm
 simpleNbox, Ftalbedo, W m-2, W m-2, Radiative Forcing|Anthropogenic|Albedo Change, W m-2, W m-2
 so2, SO2_emissions, Gg year-1, Gg year-1, Emissions|Sulfur, Mt SO2 year-1, Mt year-1
 so2, SV, W m-2, W m-2, Radiative Forcing|Natural|Volcanic, W m-2, W m-2
 CH4, CH4_emissions, Tg CH4 year-1, Tg year-1, Emissions|CH4, Mt CH4 year-1, Mt year-1
 OH|ozone, NOX_emissions, Tg N year-1, 1/14.007 Tg year-1, Emissions|NOx, Mt NOx year-1, Mt 1/46.007 year-1
 OH|ozone, CO_emissions, Tg CO year-1, Tg year-1, Emissions|CO, Mt CO year-1, Mt year-1
-OH|ozone, NMVOC_emissions, Tg NMVOC year-1, Tg year-1, Emissions|VOC***, Mt VOC year-1, Mt year-1
+OH|ozone, NMVOC_emissions, Tg NMVOC year-1, Tg year-1, Emissions|VOC, Mt VOC year-1, Mt year-1
 N2O, N2O_emissions, Tg N year-1, 44.014/14.007 Tg year-1, Emissions|N2O, kt N2O year-1, 1000 t year-1
-bc, BC_emissions, Tg year-1, Tg year-1, Emissions|BC, Mt BC year-1, Mt year-1
-oc, OC_emissions, Tg year-1, Tg year-1, Emissions|OC, Mt OC year-1, Mt year-1
-simpleNbox, Ca_constrain, ppm, ppm, Atmospheric Concentrations|CO2, ppm, ppm
+N2O, N2O, ppb, ppb, Atmospheric Concentrations|N2O, ppb, ppb
+BC, BC_emissions, Tg year-1, Tg year-1, Emissions|BC, Mt BC year-1, Mt year-1
+OC, OC_emissions, Tg year-1, Tg year-1, Emissions|OC, Mt OC year-1, Mt year-1
+CH4, CH4_emissions, Tg year-1, Tg year-1, Emissions|CH4, Mt CH4 year-1, Mt year-1
 CH4, CH4, ppb, ppb, Atmospheric Concentrations|CH4, ppb, ppb
 HFC125_halocarbon, HFC125_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC125, ppt, ppt
 HFC134a_halocarbon, HFC134a_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC134a, ppt, ppt
@@ -53,4 +57,3 @@ halon2402_halocarbon, halon2402_concentration, ppt, ppt, Atmospheric Concentrati
 HCFC141b_halocarbon, HCFC141b_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|HCFC141b, ppt, ppt
 HCFC142b_halocarbon, HCFC142b_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|HCFC142b, ppt, ppt
 HCFC22_halocarbon, HCFC22_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|HCFC22, ppt, ppt
-N2O, N2O, ppb, ppb, Atmospheric Concentrations|N2O, ppb, ppb

@@ -28,29 +28,21 @@ tier1 <- tribble(
 tier1_inputs <- all_long %>%
   inner_join(tier1, "Scenario")
 
-set_variable <- function(core, input_data, varname) {
-  varconv <- readr::read_csv(system.file(
+tier1_inputs %>%
+  distinct(Scenario, Variable) %>%
+  count(Variable, sort = TRUE) %>%
+  ## filter(grepl("^Emissions", Variable)) %>%
+  print(n = Inf)
+
+run_concentration_scenario <- function(input, scenario, basedon = "rcp45",
+                                       driver = "emissions", vars = NULL) {
+  hector_vars <- readr::read_csv(system.file(
     "variable-conversion.csv",
     package = "hector.rcmip"
-  ), col_types = readr::cols(.default = "c")) %>%
-    dplyr::filter(rcmip_variable == !!varname)
-  stopifnot(nrow(varconv) == 1)
-  invar <- input_data %>%
-    dplyr::filter(Variable == !!varname,
-                  year > 1745)
-  invar <- dplyr::arrange(invar, year)
-  stopifnot(nrow(invar) > 0)
-  year <- invar$year
-  unit <- varconv$rcmip_udunits
-  hector_unit <- varconv$hector_udunits
-  hector_name <- varconv$hector_variable
-  value <- udunits2::ud.convert(invar$value, unit, hector_unit)
-  hector::setvar(core, year, hector_name, value, varconv$hector_unit)
-  invisible(core)
-}
-
-run_concentration_scenario <- function(input, scenario, basedon = "rcp45", vars = NULL) {
-  input_sub <- dplyr::filter(input, Scenario == !!scenario)
+  ), col_types = readr::cols(.default = "c"))
+  input_sub <- input %>%
+    dplyr::filter(Scenario == !!scenario) %>%
+    dplyr::semi_join(hector_vars)
   stopifnot(nrow(input_sub) > 0)
   dates <- sort(unique(input_sub$year))
   # HACK: Start at the first value provided by RCMIP, but no earlier than 1765
@@ -74,22 +66,42 @@ run_concentration_scenario <- function(input, scenario, basedon = "rcp45", vars 
     hc <- tryCatch(
       set_variable(hc, input_sub, v),
       # Skip errors silently
-      error = function(e) return(hc)
+      error = function(e) {
+        msg <- paste0("Error setting variable ", v, ":\n",
+                      conditionMessage(e))
+        warning(msg)
+        return(hc)
+      }
     )
   }
-  invisible(run(hc))
-  result <- tibble::as_tibble(hector::fetchvars(
-    hc, dates, vars, scenario
-  ))
-  return(result)
+  htest <- tryCatch({
+    invisible(run(hc))
+    TRUE
+  }, error = function(e) {
+    msg <- paste0("Error running scenario ", scenario, ":\n",
+                  conditionMessage(e))
+    warning(msg)
+    return(FALSE)
+  })
+  if (htest) {
+    tibble::as_tibble(hector::fetchvars(
+      hc, dates, vars, scenario
+    ))
+  } else {
+    NULL
+  }
 }
+
+options(nwarnings = 1000)
 
 tier1_results <- tier1_inputs %>%
   distinct(Model, Scenario) %>%
   mutate(
-    result = map(Scenario, possibly(run_concentration_scenario, NULL),
+    result = map(Scenario, run_concentration_scenario,
                  input = tier1_inputs)
   )
+
+warnings()
 
 tier1_results %>%
   unnest(result) %>%
@@ -102,3 +114,19 @@ tier1_results %>%
   theme_bw()
 
 ggsave("figures/rcmip-tier1.png", width = 7, height = 7)
+
+
+if (FALSE) {
+  input_data <- tier1_inputs %>%
+    filter(Scenario == Scenario[[1]])
+  scenario <- input_data[["Scenario"]][1]
+
+  tier1_inputs %>%
+    distinct(Variable, Unit) %>%
+    filter(grepl("N2O", Variable)) %>%
+    print(n = Inf)
+
+  tier1_inputs %>%
+    filter(grepl("Emissions\\|CH4", Variable)) %>%
+    distinct(Variable, Unit)
+}
