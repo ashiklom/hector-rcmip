@@ -5,7 +5,7 @@ requireNamespace("fst", quietly = TRUE)
 
 ## dir_ls(here("data-raw"))
 
-conc_long <- here("data-raw", "rcmip-concentrations-annual-means-v1-0-0.csv") %>%
+conc_long <- here("data-raw", "rcmip-concentrations-annual-means-v3-0-0.csv") %>%
   read_csv() %>%
   pivot_longer(
     matches("[[:digit:]]{4}"),
@@ -14,7 +14,7 @@ conc_long <- here("data-raw", "rcmip-concentrations-annual-means-v1-0-0.csv") %>
     names_ptypes = list(year = numeric())
   )
 
-emiss_long <- here("data-raw", "rcmip-emissions-annual-means-v1-0-0.csv") %>%
+emiss_long <- here("data-raw", "rcmip-emissions-annual-means-v3-0-0.csv") %>%
   read_csv() %>%
   pivot_longer(
     matches("[[:digit:]]{4}"),
@@ -23,7 +23,7 @@ emiss_long <- here("data-raw", "rcmip-emissions-annual-means-v1-0-0.csv") %>%
     names_ptypes = list(year = numeric())
   )
 
-rf_long <- here("data-raw", "rcmip-radiative-forcing-annual-means-v1-0-0.csv") %>%
+rf_long <- here("data-raw", "rcmip-radiative-forcing-annual-means-v3-0-0.csv") %>%
   read_csv() %>%
   pivot_longer(
     matches("[[:digit:]]{4}"),
