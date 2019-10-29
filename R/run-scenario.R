@@ -118,6 +118,7 @@ run_scenario <- function(input_data, scenario) {
 
   for (i in seq_len(nrow(halocarbon_dict))) {
     irow <- halocarbon_dict[i,]
+    ivar <- haloca
   }
 
   tryCatch(
