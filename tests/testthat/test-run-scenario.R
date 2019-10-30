@@ -1,8 +1,11 @@
 context("Running scenarios")
 
 test_that("Running basic scenario works", {
-  out <- run_scenario("historical")
-  out_ca <- subset(out, variable == "Ca")
-  expect_true(all(out_ca$value > 200))
-  expect_equivalent(range(out$year), c(1765, 2014))
+  hc <- run_scenario("historical")
+  start <- hector::startdate(hc)
+  expect_equal(start, 1765)
+  end <- hector::enddate(hc)
+  expect_equal(end, 2014)
+  out <- hector::fetchvars(hc, seq(start, end), "Ca")
+  expect_true(all(out$value > 200))
 })

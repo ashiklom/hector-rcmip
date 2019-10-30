@@ -9,6 +9,9 @@ run_scenario(scenario)
 \arguments{
 \item{scenario}{Name of scenario}
 }
+\value{
+Hector core object at the run end date
+}
 \description{
 Run an RCMIP Scenario using Hector
 }

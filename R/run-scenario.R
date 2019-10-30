@@ -1,7 +1,7 @@
 #' Run an RCMIP Scenario using Hector
 #'
 #' @param scenario Name of scenario
-#' @return
+#' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
 #' @export
 run_scenario <- function(scenario) {
@@ -149,11 +149,6 @@ run_scenario <- function(scenario) {
       )
     }
   )
-
-  vars <- c("Ca", "Tgav", "FCO2", "Ftot")
-  tibble::as_tibble(hector::fetchvars(
-    hc, dates, vars, scenario = scenario
-  ))
 
 }
 
