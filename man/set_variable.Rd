@@ -5,7 +5,7 @@
 \title{Set Hector variable to RCMIP data}
 \usage{
 set_variable(core, input_data, varname = NULL,
-  hector_vars = rcmip2hector_df())
+  hector_vars = rcmip2hector_df(), interpolate = TRUE)
 }
 \arguments{
 \item{core}{Hector core object}
@@ -16,6 +16,9 @@ set_variable(core, input_data, varname = NULL,
 \code{input_data}.}
 
 \item{hector_vars}{RCMIP to Hector variable conversion table}
+
+\item{interpolate}{(Logical) If \code{TRUE} (default), interpolate incomplete time
+series using \code{\link[stats:approxfun]{stats::approxfun()}}}
 }
 \value{
 \code{core}, invisibly

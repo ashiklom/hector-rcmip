@@ -3,10 +3,11 @@
 #' @param scenario Name of scenario
 #' @param control (Logical) If `TRUE`, assume a control run and set more stuff
 #'   to zero.
+#' @param ... Additional arguments to [set_variable()]
 #' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
 #' @export
-run_scenario <- function(scenario, control = FALSE) {
+run_scenario <- function(scenario, control = FALSE, ...) {
 
   hector_vars <- rcmip2hector_df()
 
@@ -37,11 +38,12 @@ run_scenario <- function(scenario, control = FALSE) {
   co2 <- subset_hector_var(input_sub, "Ca_constrain")
   if (nrow(ffi) && nrow(luc)) {
     # Use FFI and LUC emissions
-    hc <- set_variable(hc, ffi)
-    hc <- set_variable(hc, luc)
+    hc <- set_variable(hc, ffi, ...)
+    hc <- set_variable(hc, luc, ...)
   } else if (nrow(co2)) {
     # Use CO2 concentrations
-    hc <- set_variable(hc, co2)
+    # HACK: If this is an incomplete, it has to be interpolated
+    hc <- set_variable(hc, co2, ...)
   } else {
     warning("Scenario ", scenario, " has no CO2 data.")
   }
@@ -50,9 +52,9 @@ run_scenario <- function(scenario, control = FALSE) {
   emit <- subset_hector_var(input_sub, "CH4_emissions")
   conc <- subset_hector_var(input_sub, "CH4")
   if (nrow(emit)) {
-    hc <- set_variable(hc, emit)
+    hc <- set_variable(hc, emit, ...)
   } else if (nrow(conc)) {
-    hc <- set_variable(hc, conc)
+    hc <- set_variable(hc, conc, ...)
   }
 
   # OH and ozone
@@ -61,16 +63,16 @@ run_scenario <- function(scenario, control = FALSE) {
   voc_emit <- subset_hector_var(input_sub, "NMVOC_emissions")
   if (nrow(nox_emit) && nrow(co_emit) && nrow(voc_emit)) {
     # Only set these if all three are present
-    hc <- set_variable(hc, nox_emit)
-    hc <- set_variable(hc, co_emit)
-    hc <- set_variable(hc, voc_emit)
+    hc <- set_variable(hc, nox_emit, ...)
+    hc <- set_variable(hc, co_emit, ...)
+    hc <- set_variable(hc, voc_emit, ...)
   }
 
   # N2O
   emit <- subset_hector_var(input_sub, "N2O_emissions")
   conc <- subset_hector_var(input_sub, "N2O")
   if (nrow(emit)) {
-    hc <- set_variable(hc, emit)
+    hc <- set_variable(hc, emit, ...)
     # Also set natural emissions. These values are the Hector defaults (linear
     # interpolation), but set manually to avoid issues with dates.
     n2o_natural_emit <- approxfun(c(1765, 2000, 2300), c(11, 8, 5))(rundates)
@@ -87,7 +89,7 @@ run_scenario <- function(scenario, control = FALSE) {
     dat <- subset_hector_var(input_sub, v)
     if (nrow(dat) > 0) {
       tryCatch(
-        hc <- set_variable(hc, dat),
+        hc <- set_variable(hc, dat, ...),
         error = function(e) {
           stop("Hit the following error on variable ", v, ":\n",
                conditionMessage(e))
@@ -126,7 +128,7 @@ run_scenario <- function(scenario, control = FALSE) {
     indat <- input_sub %>%
       dplyr::filter(Variable == !!i_rcmip_var)
     tryCatch(
-      hc <- set_variable(hc, indat),
+      hc <- set_variable(hc, indat, ...),
       error = function(e) {
         stop(
           "Error setting Hector variable ", i_hector_var,

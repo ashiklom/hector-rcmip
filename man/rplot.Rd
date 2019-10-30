@@ -7,7 +7,8 @@
 rplot(results)
 }
 \arguments{
-\item{results}{Hector results, as produced by \code{\link[hector:fetchvars]{hector::fetchvars()}}}
+\item{results}{Hector results, as produced by \code{\link[hector:fetchvars]{hector::fetchvars()}}, or a
+Hector core, in which case default variables will be read in.}
 }
 \value{
 \code{ggplot2} plot object
