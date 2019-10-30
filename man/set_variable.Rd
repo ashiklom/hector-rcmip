@@ -4,21 +4,18 @@
 \alias{set_variable}
 \title{Set Hector variable to RCMIP data}
 \usage{
-set_variable(core, input_data,
-  varname = unique(input_data[["Variable"]]), hector_vars,
-  default = NULL)
+set_variable(core, input_data, varname = NULL,
+  hector_vars = rcmip2hector_df())
 }
 \arguments{
 \item{core}{Hector core object}
 
 \item{input_data}{\code{data.frame} of RCMIP inputs for a specific scenario.}
 
-\item{varname}{Variable name, as it appears}
+\item{varname}{RCMIP variable name. Defaults to unique \code{Variable} in
+\code{input_data}.}
 
 \item{hector_vars}{RCMIP to Hector variable conversion table}
-
-\item{default}{Default value, in RCMIP units. If \code{NULL} (default), don't set
-a default and throw an error if data are missing.}
 }
 \value{
 \code{core}, invisibly
