@@ -64,11 +64,6 @@ run_scenario <- function(scenario, control = FALSE) {
     hc <- set_variable(hc, nox_emit)
     hc <- set_variable(hc, co_emit)
     hc <- set_variable(hc, voc_emit)
-  } else {
-    # HACK: Set to zero (is this correct?)
-    hector::setvar(hc, rundates, "NOX_emissions", 0, "Tg N year-1")
-    hector::setvar(hc, rundates, "CO_emissions", 0, "Tg CO year-1")
-    hector::setvar(hc, rundates, "NMVOC_emissions", 0, "Tg NMVOC year-1")
   }
 
   # N2O
