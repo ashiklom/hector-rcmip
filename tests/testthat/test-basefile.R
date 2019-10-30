@@ -1,7 +1,7 @@
 context("Default INI file")
 
 test_that("Hector will run with default INI file", {
-  f <- system.file("rcmip-default.ini", package = "hector.rcmip")
+  f <- rcmip_ini()
   expect_true(file.exists(f))
   hc <- hector::newcore(f, suppresslogging = TRUE)
   invisible(hector::run(hc))

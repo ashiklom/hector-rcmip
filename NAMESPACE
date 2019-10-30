@@ -3,6 +3,8 @@
 export(halocarbon_data)
 export(halocarbon_info)
 export(implied_emissions)
+export(rcmip_core)
+export(rcmip_ini)
 export(rcmip_inputs)
 export(set_variable)
 importFrom(magrittr,"%>%")
