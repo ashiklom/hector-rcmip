@@ -12,6 +12,7 @@ rplot <- function(results) {
   ggplot2::ggplot(results) +
     ggplot2::aes(x = year, y = value, color = scenario) +
     ggplot2::geom_line() +
-    ggplot2::facet_wrap(vars(variable), scales = "free_y") +
+    ggplot2::facet_wrap(ggplot2::vars(variable),
+                        scales = "free_y") +
     ggplot2::theme_bw()
 }
