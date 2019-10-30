@@ -1,17 +1,16 @@
 #' Run an RCMIP Scenario using Hector
 #'
-#' @param input_data RCMIP input data
 #' @param scenario Name of scenario
 #' @return
 #' @author Alexey Shiklomanov
 #' @export
-run_scenario <- function(input_data, scenario) {
+run_scenario <- function(scenario) {
 
   hector_vars <- rcmip2hector_df()
 
-  input_sub <- input_data %>%
+  input_sub <- rcmip_inputs() %>%
     dplyr::filter(Scenario == !!scenario)
-  stopifnot(nrow(input_sub))
+  stopifnot(nrow(input_sub) > 0)
 
   dates <- sort(unique(input_sub$year))
   # HACK: Start at the first value provided by RCMIP, but no earlier than 1765
@@ -20,9 +19,7 @@ run_scenario <- function(input_data, scenario) {
   # HACK: Same as above for the last year
   maxyear <- min(max(dates), 2300)
 
-  basefile <- system.file("input", paste0("hector_", basedon, ".ini"),
-                          package = "hector")
-  stopifnot(file.exists(basefile))
+  basefile <- rcmip_ini()
   ini <- hectortools::read_ini(basefile)
   ini$core$startDate <- minyear
   ini$core$endDate <- maxyear
@@ -33,7 +30,7 @@ run_scenario <- function(input_data, scenario) {
   rundates <- seq(minyear, maxyear)
 
   # CO2
-  ffi <- subset_hector_var(input_data, "ffi_emissions")
+  ffi <- subset_hector_var(input_sub, "ffi_emissions")
   luc <- subset_hector_var(input_sub, "luc_emissions")
   co2 <- subset_hector_var(input_sub, "Ca_constrain")
   if (nrow(ffi) && nrow(luc)) {
@@ -48,8 +45,8 @@ run_scenario <- function(input_data, scenario) {
   }
 
   # CH4
-  emit <- subset_hector_var(input_data, "CH4_emissions")
-  conc <- subset_hector_var(input_data, "CH4")
+  emit <- subset_hector_var(input_sub, "CH4_emissions")
+  conc <- subset_hector_var(input_sub, "CH4")
   if (nrow(emit)) {
     hc <- set_variable(hc, emit)
   } else if (nrow(conc)) {
@@ -57,9 +54,9 @@ run_scenario <- function(input_data, scenario) {
   }
 
   # OH and ozone
-  nox_emit <- subset_hector_var(input_data, "NOX_emissions")
-  co_emit <- subset_hector_var(input_data, "CO_emissions")
-  voc_emit <- subset_hector_var(input_data, "NMVOC_emissions")
+  nox_emit <- subset_hector_var(input_sub, "NOX_emissions")
+  co_emit <- subset_hector_var(input_sub, "CO_emissions")
+  voc_emit <- subset_hector_var(input_sub, "NMVOC_emissions")
   if (nrow(nox_emit) && nrow(co_emit) && nrow(voc_emit)) {
     # Only set these if all three are present
     hc <- set_variable(hc, nox_emit)
@@ -67,20 +64,20 @@ run_scenario <- function(input_data, scenario) {
     hc <- set_variable(hc, voc_emit)
   } else {
     # HACK: Set to zero (is this correct?)
-    setvar(hc, rundates, "NOX_emissions", 0, "Tg N year-1")
-    setvar(hc, rundates, "CO_emissions", 0, "Tg CO year-1")
-    setvar(hc, rundates, "NMVOC_emissions", 0, "Tg NMVOC year-1")
+    hector::setvar(hc, rundates, "NOX_emissions", 0, "Tg N year-1")
+    hector::setvar(hc, rundates, "CO_emissions", 0, "Tg CO year-1")
+    hector::setvar(hc, rundates, "NMVOC_emissions", 0, "Tg NMVOC year-1")
   }
 
   # N2O
-  emit <- subset_hector_var(input_data, "N2O_emissions")
-  conc <- subset_hector_var(input_data, "N2O")
+  emit <- subset_hector_var(input_sub, "N2O_emissions")
+  conc <- subset_hector_var(input_sub, "N2O")
   if (nrow(emit)) {
     hc <- set_variable(hc, emit)
     # Also set natural emissions. These values are the Hector defaults (linear
     # interpolation), but set manually to avoid issues with dates.
     n2o_natural_emit <- approxfun(c(1765, 2000, 2300), c(11, 8, 5))(rundates)
-    setvar(hc, rundates, "N2O_natural_emissions", n2o_natural_emit)
+    hector::setvar(hc, rundates, "N2O_natural_emissions", n2o_natural_emit, "Tg N")
   }
 
   # Variables that can be handled naively
@@ -90,46 +87,60 @@ run_scenario <- function(input_data, scenario) {
     "BC_emissions", "OC_emissions"
   )
   for (v in naive_vars) {
-    dat <- subset_hector_var(input_data, v)
-    if (nrow(dat) == 0) {
-      warning("Scenario ", scenario, "has no data for ", v, ".")
+    dat <- subset_hector_var(input_sub, v)
+    if (nrow(dat) > 0) {
+      tryCatch(
+        hc <- set_variable(hc, dat),
+        error = function(e) {
+          stop("Hit the following error on variable ", v, ":\n",
+               conditionMessage(e))
+        }
+      )
+    } else {
+      warning("Scenario ", scenario, " has no data for ", v, ". ",
+              "Using default value.")
     }
-    hc <- set_variable(hc, dat, default = 0)
   }
 
-  # Same logic for halocarbons.
-  # HACK: For now, only use the ones already defined.
-  halocarbons <- rcmip2hector_df() %>%
-    dplyr::filter(grepl("_halocarbon", hector_component)) %>%
-    dplyr::transmute(halocarbon = gsub("_halocarbon", "", hector_component)) %>%
-    dplyr::distinct(halocarbon)
-
-  halocarbon_dict <- input_data %>%
-    dplyr::distinct(Variable) %>%
-    fuzzyjoin::regex_inner_join(halocarbons, c("Variable" = "halocarbon")) %>%
-    dplyr::mutate(
-      datatype = dplyr::case_when(
-        grepl("^Atmospheric Concentrations", Variable) ~ "concentration",
-        grepl("^Emissions", Variable) ~ "emissions",
-        TRUE ~ "UNKNOWN"
-      ),
-      hector_variable = paste(halocarbon, datatype, sep = "_")
-    )
-
-  for (i in seq_len(nrow(halocarbon_dict))) {
-    irow <- halocarbon_dict[i,]
-    ivar <- haloca
-  }
+  ## # Same logic for halocarbons.
+  ## # HACK: For now, only use the ones already defined.
+  ## halocarbons <- hector_vars %>%
+  ##   dplyr::filter(grepl("_halocarbon", hector_component)) %>%
+  ##   dplyr::transmute(halocarbon = gsub("_halocarbon", "", hector_component),
+  ##                    halocarbon_rxp = paste0(halocarbon, "$")) %>%
+  ##   dplyr::distinct(halocarbon, halocarbon_rxp)
+  ## halocarbon_dict <- input_sub %>%
+  ##   dplyr::distinct(Variable) %>%
+  ##   fuzzyjoin::regex_inner_join(halocarbons, c("Variable" = "halocarbon_rxp")) %>%
+  ##   dplyr::mutate(
+  ##     datatype = dplyr::case_when(
+  ##       grepl("^Atmospheric Concentrations", Variable) ~ "concentration",
+  ##       grepl("^Emissions", Variable) ~ "emissions",
+  ##       TRUE ~ "UNKNOWN"
+  ##     ),
+  ##     hector_variable = paste(halocarbon, datatype, sep = "_")
+  ##   )
+  ## for (i in seq_len(nrow(halocarbon_dict))) {
+  ##   irow <- halocarbon_dict[i,]
+  ##   i_rcmip_var <- irow[["Variable"]]
+  ##   i_hector_var <- irow[["hector_variable"]]
+  ##   indat <- input_sub %>%
+  ##     dplyr::filter(Variable == !!i_rcmip_var)
+  ##   hc <- set_variable(hc, indat)
+  ## }
 
   tryCatch(
-    invisible(run(hc)),
+    invisible(hector::run(hc)),
     error = function(e) {
-      msg <- paste("Scenario", scenario, "failed with the following error:\n",
-                   conditionMessage(e))
-      stop(msg)
+      stop(
+        "Running scenario ", scenario,
+        " failed with the following error:\n",
+        conditionMessage(e)
+      )
     }
   )
 
+  vars <- c("Ca", "Tgav", "FCO2", "Ftot")
   tibble::as_tibble(hector::fetchvars(
     hc, dates, vars, scenario = scenario
   ))
@@ -149,7 +160,7 @@ subset_hector_var <- function(input_data, hector_var) {
   stopifnot(nrow(hector_sub) > 0)
   result <- input_data %>%
     dplyr::semi_join(hector_sub, c("Variable" = "rcmip_variable"))
-  if(length(unique(result$Variable)) != 1) {
+  if (length(unique(result$Variable)) > 1) {
     stop("Multiple matching variables found for ", hector_var)
   }
   result
