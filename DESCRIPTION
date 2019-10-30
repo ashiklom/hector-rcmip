@@ -21,3 +21,5 @@ Imports:
     here,
     tibble,
     fuzzyjoin
+Suggests: 
+    testthat
