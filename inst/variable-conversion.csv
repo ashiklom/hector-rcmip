@@ -5,7 +5,7 @@ simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|AFOLU, M
 simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|MAGICC AFOLU, Mt CO2 year-1, Mt 1/44.01 year-1
 simpleNbox, Ca_constrain, ppm, ppm, Atmospheric Concentrations|CO2, ppm, ppm
 simpleNbox, Ftalbedo, W m-2, W m-2, Radiative Forcing|Anthropogenic|Albedo Change, W m-2, W m-2
-so2, SO2_emissions, Gg year-1, Gg year-1, Emissions|Sulfur, Mt SO2 year-1, Mt year-1
+so2, SO2_emissions, Gg S year-1, Gg 1/32.1 year-1, Emissions|Sulfur, Mt SO2 year-1, Mt 1/64.1 year-1
 so2, SV, W m-2, W m-2, Radiative Forcing|Natural|Volcanic, W m-2, W m-2
 CH4, CH4_emissions, Tg CH4 year-1, Tg year-1, Emissions|CH4, Mt CH4 year-1, Mt year-1
 CH4, CH4, ppb, ppb, Atmospheric Concentrations|CH4, ppb, ppb
