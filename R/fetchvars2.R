@@ -10,5 +10,10 @@ fetchvars2 <- function(core, vars = NULL, dates = NULL, ...) {
   if (is.null(dates)) {
     dates <- seq(hector::startdate(core), hector::enddate(core))
   }
-  hector::fetchvars(core, dates = dates, vars = vars, ...)
+  tibble::as_tibble(hector::fetchvars(
+    core,
+    dates = dates,
+    vars = vars,
+    ...
+  ))
 }
