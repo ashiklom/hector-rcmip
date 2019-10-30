@@ -4,10 +4,13 @@
 \alias{run_scenario}
 \title{Run an RCMIP Scenario using Hector}
 \usage{
-run_scenario(scenario)
+run_scenario(scenario, control = FALSE)
 }
 \arguments{
 \item{scenario}{Name of scenario}
+
+\item{control}{(Logical) If \code{TRUE}, assume a control run and set more stuff
+to zero.}
 }
 \value{
 Hector core object at the run end date

@@ -1,10 +1,12 @@
 #' Run an RCMIP Scenario using Hector
 #'
 #' @param scenario Name of scenario
+#' @param control (Logical) If `TRUE`, assume a control run and set more stuff
+#'   to zero.
 #' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
 #' @export
-run_scenario <- function(scenario) {
+run_scenario <- function(scenario, control = FALSE) {
 
   hector_vars <- rcmip2hector_df()
 
