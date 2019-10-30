@@ -102,32 +102,42 @@ run_scenario <- function(scenario) {
     }
   }
 
-  ## # Same logic for halocarbons.
-  ## # HACK: For now, only use the ones already defined.
-  ## halocarbons <- hector_vars %>%
-  ##   dplyr::filter(grepl("_halocarbon", hector_component)) %>%
-  ##   dplyr::transmute(halocarbon = gsub("_halocarbon", "", hector_component),
-  ##                    halocarbon_rxp = paste0(halocarbon, "$")) %>%
-  ##   dplyr::distinct(halocarbon, halocarbon_rxp)
-  ## halocarbon_dict <- input_sub %>%
-  ##   dplyr::distinct(Variable) %>%
-  ##   fuzzyjoin::regex_inner_join(halocarbons, c("Variable" = "halocarbon_rxp")) %>%
-  ##   dplyr::mutate(
-  ##     datatype = dplyr::case_when(
-  ##       grepl("^Atmospheric Concentrations", Variable) ~ "concentration",
-  ##       grepl("^Emissions", Variable) ~ "emissions",
-  ##       TRUE ~ "UNKNOWN"
-  ##     ),
-  ##     hector_variable = paste(halocarbon, datatype, sep = "_")
-  ##   )
-  ## for (i in seq_len(nrow(halocarbon_dict))) {
-  ##   irow <- halocarbon_dict[i,]
-  ##   i_rcmip_var <- irow[["Variable"]]
-  ##   i_hector_var <- irow[["hector_variable"]]
-  ##   indat <- input_sub %>%
-  ##     dplyr::filter(Variable == !!i_rcmip_var)
-  ##   hc <- set_variable(hc, indat)
-  ## }
+  # Same logic for halocarbons.
+  # HACK: For now, only use the ones already defined.
+  halocarbons <- hector_vars %>%
+    dplyr::filter(grepl("_halocarbon", hector_component)) %>%
+    dplyr::transmute(halocarbon = gsub("_halocarbon", "", hector_component),
+                     halocarbon_rxp = paste0(halocarbon, "$")) %>%
+    dplyr::distinct(halocarbon, halocarbon_rxp)
+ 
+  halocarbon_dict <- input_sub %>%
+    dplyr::distinct(Variable) %>%
+    fuzzyjoin::regex_inner_join(halocarbons, c("Variable" = "halocarbon_rxp")) %>%
+    dplyr::mutate(
+      datatype = dplyr::case_when(
+        grepl("^Atmospheric Concentrations", Variable) ~ "concentration",
+        grepl("^Emissions", Variable) ~ "emissions",
+        TRUE ~ "UNKNOWN"
+      ),
+      hector_variable = paste(halocarbon, datatype, sep = "_")
+    )
+ 
+  for (i in seq_len(nrow(halocarbon_dict))) {
+    irow <- halocarbon_dict[i,]
+    i_rcmip_var <- irow[["Variable"]]
+    i_hector_var <- irow[["hector_variable"]]
+    indat <- input_sub %>%
+      dplyr::filter(Variable == !!i_rcmip_var)
+    tryCatch(
+      hc <- set_variable(hc, indat),
+      error = function(e) {
+        stop(
+          "Error setting Hector variable ", i_hector_var,
+          " / RCMIP variable ", i_rcmip_var, "."
+        )
+      }
+    )
+  }
 
   tryCatch(
     invisible(hector::run(hc)),
