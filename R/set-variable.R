@@ -32,7 +32,7 @@ set_variable <- function(core, input_data,
   hector_unit <- varconv$hector_udunits
   hector_name <- varconv$hector_variable
   invar <- input_data %>%
-    dplyr::filter(Variable == !!varname, year > 1745) %>%
+    dplyr::filter(Variable == !!varname) %>%
     dplyr::arrange(year)
   if (interpolate) invar <- interpolate_var(invar)
   year <- invar$year

@@ -18,31 +18,58 @@ run_scenario <- function(scenario, control = FALSE, ...) {
   dates <- sort(unique(input_sub$year))
   # HACK: Start at the first value provided by RCMIP, but no earlier than 1765
   # (because I have no Hector defaults before then)
-  minyear <- max(min(dates), 1765)
-  # HACK: Same as above for the last year
+  ## minyear <- max(min(dates), 1750)
+  minyear <- max(min(dates), 1745)
   maxyear <- min(max(dates), 2300)
+  rundates <- seq(minyear, maxyear)
 
   basefile <- rcmip_ini()
   ini <- hectortools::read_ini(basefile)
-  ini$core$startDate <- minyear
-  ini$core$endDate <- maxyear
-  # HACK: This should really be `minyear`, but that doesn't work for some reason
-  ini$forcing$baseyear <- minyear + 1
+
+  # Special case scenarios. These require inputs to be interpolated back to start date.
+  abrupt_scenarios <- sprintf("abrupt-%sCO2", c("0p5x", "2x", "4x"))
+  interp_scenarios <- c(
+    "piControl", "1pctCO2", "1pctCO2-4xext",
+    abrupt_scenarios
+  )
 
   hc <- hectortools::newcore_ini(ini, suppresslogging = TRUE, name = scenario)
-  rundates <- seq(minyear, maxyear)
+
+  if (scenario %in% interp_scenarios) {
+    # HACK: Need to extend the time series to get this to work properly
+    input_wide <- input_sub %>%
+      dplyr::select(Variable, year, value) %>%
+      tidyr::pivot_wider(names_from = "Variable", values_from = "value") %>%
+      tidyr::complete(year = seq(1745, 2300)) %>%
+      dplyr::mutate_if(
+        is.double,
+        ~approxfun(year, .x, rule = 2)(year)
+      )
+    if (scenario %in% abrupt_scenarios) {
+      c0 <- hector::fetchvars(hc, hector::startdate(hc), "Ca")[["value"]]
+      input_wide <- input_wide %>%
+        dplyr::mutate(
+          `Atmospheric Concentrations|CO2` = dplyr::case_when(
+            year < min(input_sub$year) ~ c0,
+            TRUE ~ `Atmospheric Concentrations|CO2`
+          )
+        )
+    }
+    input_sub <- input_wide %>%
+      tidyr::pivot_longer(-year, names_to = "Variable", values_to = "value")
+  }
 
   # CO2
   ffi <- subset_hector_var(input_sub, "ffi_emissions")
   luc <- subset_hector_var(input_sub, "luc_emissions")
   co2 <- subset_hector_var(input_sub, "Ca_constrain")
+
   if (nrow(ffi) && nrow(luc)) {
     # Use FFI and LUC emissions
     hc <- set_variable(hc, ffi, ...)
     hc <- set_variable(hc, luc, ...)
   } else if (nrow(co2)) {
     # Use CO2 concentrations
-    # HACK: If this is an incomplete, it has to be interpolated
     hc <- set_variable(hc, co2, ...)
   } else {
     warning("Scenario ", scenario, " has no CO2 data.")
