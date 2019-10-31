@@ -71,6 +71,11 @@ run_scenario <- function(scenario, control = FALSE, ...) {
   } else if (nrow(co2)) {
     # Use CO2 concentrations
     hc <- set_variable(hc, co2, ...)
+    if (min(co2$year) <= 1745) {
+      # Also set the pre-industrial value
+      hector::setvar(hc, NA, hector::PREINDUSTRIAL_CO2(),
+                     co2$value[co2$year == 1745], "ppm")
+    }
   } else {
     warning("Scenario ", scenario, " has no CO2 data.")
   }
@@ -82,6 +87,11 @@ run_scenario <- function(scenario, control = FALSE, ...) {
     hc <- set_variable(hc, emit, ...)
   } else if (nrow(conc)) {
     hc <- set_variable(hc, conc, ...)
+    if (min(conc$year) <= 1745) {
+      # Also set the pre-industrial value
+      hector::setvar(hc, NA, hector::PREINDUSTRIAL_CH4(),
+                     conc$value[conc$year == 1745], "ppb")
+    }
   }
 
   # OH and ozone
