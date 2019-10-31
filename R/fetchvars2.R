@@ -10,10 +10,12 @@ fetchvars2 <- function(core, vars = NULL, dates = NULL, ...) {
   if (is.null(dates)) {
     dates <- seq(hector::startdate(core), hector::enddate(core))
   }
-  tibble::as_tibble(hector::fetchvars(
-    core,
+  result_list <- purrr::map_dfr(
+    vars,
+    purrr::possibly(hector::fetchvars, NULL, quiet = FALSE),
+    core = core,
     dates = dates,
-    vars = vars,
     ...
-  ))
+  )
+  tibble::as_tibble(dplyr::bind_rows(result_list))
 }
