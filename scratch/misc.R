@@ -93,3 +93,8 @@ ggplot(input_sub) +
   aes(x = year, y = value) +
   geom_point() +
   facet_wrap(vars(Variable), scales = "free_y")
+
+
+sn <- run_scenario("abrupt-4xCO2")
+rplot(sn) +
+  ggplot2::xlim(c(NA, 2100))
