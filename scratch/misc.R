@@ -98,3 +98,21 @@ ggplot(input_sub) +
 sn <- run_scenario("abrupt-4xCO2")
 rplot(sn) +
   ggplot2::xlim(c(NA, 2100))
+
+##################################################
+
+scenario <- "1pctCO2"
+s <- run_scenario(scenario)
+out <- rcmip_outputs(s)
+rplot(out)
+
+input_sub <- rcmip_inputs() %>%
+  dplyr::filter(Scenario == !!scenario)
+
+input_sub %>%
+  mutate(Variable = str_remove(Variable, "Atmospheric Concentrations\\|")) %>%
+  filter(Variable == "CO2", year < 2000) %>%
+  ggplot() +
+  aes(x = year, y = value) +
+  geom_line()
+  ## facet_wrap(vars(Variable), scales = "free_y")

@@ -1,10 +1,6 @@
 # devtools::install()
-library(hector)
-library(tidyverse)
 library(hector.rcmip)
-library(hectortools)
-
-s <- run_scenario("abrupt-2xCO2")
+library(tidyverse)
 
 options(nwarnings = 150)
 
