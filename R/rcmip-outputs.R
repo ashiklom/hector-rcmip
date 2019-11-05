@@ -5,7 +5,7 @@
 #' @author Alexey Shiklomanov
 #' @export
 rcmip_outputs <- function(core) {
-  results <- fetchvars2(picontrol, c(
+  results <- fetchvars2(core, c(
     "CH4",
     "Ca",
     "ffi_emissions", "luc_emissions",
