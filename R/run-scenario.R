@@ -11,16 +11,20 @@ run_scenario <- function(scenario, control = FALSE, ...) {
 
   hector_vars <- rcmip2hector_df()
 
+  hector_minyear <- 1745
+  hector_maxyear <- 2100
+
+  # Restrict inputs to the range of dates
   input_sub <- rcmip_inputs() %>%
-    dplyr::filter(Scenario == !!scenario)
+    dplyr::filter(
+      Scenario == !!scenario,
+      year >= hector_minyear,
+      year <= hector_maxyear
+    )
   stopifnot(nrow(input_sub) > 0)
 
-  dates <- sort(unique(input_sub$year))
-  # HACK: Start at the first value provided by RCMIP, but no earlier than 1765
-  # (because I have no Hector defaults before then)
-  ## minyear <- max(min(dates), 1750)
-  minyear <- max(min(dates), 1745)
-  maxyear <- min(max(dates), 2300)
+  minyear <- max(min(input_sub$year), hector_minyear)
+  maxyear <- min(max(input_sub$year), hector_maxyear)
   rundates <- seq(minyear, maxyear)
 
   basefile <- rcmip_ini()
@@ -40,7 +44,7 @@ run_scenario <- function(scenario, control = FALSE, ...) {
     input_wide <- input_sub %>%
       dplyr::select(Variable, year, value) %>%
       tidyr::pivot_wider(names_from = "Variable", values_from = "value") %>%
-      tidyr::complete(year = seq(1745, 2300)) %>%
+      tidyr::complete(year = seq(hector_minyear, hector_maxyear)) %>%
       dplyr::mutate_if(
         is.double,
         ~approxfun(year, .x, rule = 2)(year)
@@ -71,10 +75,21 @@ run_scenario <- function(scenario, control = FALSE, ...) {
   } else if (nrow(co2)) {
     # Use CO2 concentrations
     hc <- set_variable(hc, co2, ...)
-    if (min(co2$year) <= 1745) {
+    if (min(co2$year) <= hector_minyear) {
       # Also set the pre-industrial value
       hector::setvar(hc, NA, hector::PREINDUSTRIAL_CO2(),
-                     co2$value[co2$year == 1745], "ppm")
+                     co2$value[co2$year == hector_minyear], "ppm")
+    }
+    maxco2 <- 3500
+    if (any(co2$value > maxco2)) {
+      maxyear <- co2 %>%
+        dplyr::filter(value < maxco2) %>%
+        dplyr::pull(year) %>%
+        max()
+      warning(
+        "Some CO2 concentrations over ", maxco2, " ppm. ",
+        "Truncating to year ", maxyear, "."
+      )
     }
   } else {
     warning("Scenario ", scenario, " has no CO2 data.")
@@ -87,10 +102,10 @@ run_scenario <- function(scenario, control = FALSE, ...) {
     hc <- set_variable(hc, emit, ...)
   } else if (nrow(conc)) {
     hc <- set_variable(hc, conc, ...)
-    if (min(conc$year) <= 1745) {
+    if (min(conc$year) <= hector_minyear) {
       # Also set the pre-industrial value
       hector::setvar(hc, NA, hector::PREINDUSTRIAL_CH4(),
-                     conc$value[conc$year == 1745], "ppb")
+                     conc$value[conc$year == hector_minyear], "ppb")
     }
   }
 
@@ -112,7 +127,7 @@ run_scenario <- function(scenario, control = FALSE, ...) {
     hc <- set_variable(hc, emit, ...)
     # Also set natural emissions. These values are the Hector defaults (linear
     # interpolation), but set manually to avoid issues with dates.
-    n2o_natural_emit <- approxfun(c(1765, 2000, 2300), c(11, 8, 5))(rundates)
+    n2o_natural_emit <- approxfun(c(1765, 2000, hector_maxyear), c(11, 8, 5))(rundates)
     hector::setvar(hc, rundates, "N2O_natural_emissions", n2o_natural_emit, "Tg N")
   }
 
@@ -176,7 +191,7 @@ run_scenario <- function(scenario, control = FALSE, ...) {
   }
 
   tryCatch(
-    invisible(hector::run(hc)),
+    invisible(hector::run(hc, maxyear)),
     error = function(e) {
       stop(
         "Running scenario ", scenario,
