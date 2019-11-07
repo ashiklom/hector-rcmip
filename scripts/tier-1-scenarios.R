@@ -1,4 +1,3 @@
-# devtools::install()
 library(hector.rcmip)
 library(tidyverse)
 
@@ -34,10 +33,22 @@ for (i in seq_len(nrow(tier1))) {
   )
 }
 
-results <- map_dfr(out, fetchvars2)
+results <- map_dfr(out, rcmip_outputs, dates = seq(1750, 2100))
+rplot(results)
+ggsave("figures/tier1-results-rcmip-vars.png", width = 10, height = 8)
+
+results %>%
+  filter(variable == "Carbon Sequestration",
+         year > 1845, year < 1880) %>%
+  ggplot() +
+  aes(x = year, y = value, color = scenario) +
+  geom_line()
 
 rplot(results) +
   geom_hline(yintercept = 0, linetype = "dashed")
+
+core <- out[[1]]
+results_rcmip <- map_dfr(out, rcmip_outputs)
 
 ggsave("figures/tier1-results.png", width = 7, height = 7)
 

@@ -102,12 +102,16 @@ rplot(sn) +
 ##################################################
 
 scenario <- "1pctCO2"
-s <- run_scenario(scenario)
-core <- s
-out <- rcmip_outputs(s, 1750:2100)
-rplot(out)
+core <- run_scenario(scenario)
+out <- rcmip_outputs(core, 1750:2100)
+rplot(out) + ggplot2::xlim(1840, 1860)
 
 hector::fetchvars(s, 2000:2010, "rh", "PgC year-1")
+
+fetchvars2(core, hector::LAND_CFLUX(), 1750:2100)
+fetchvars2(core, hector::OCEAN_CFLUX())
+x <- fetchvars2(core, c(hector::LAND_CFLUX(), hector::OCEAN_CFLUX()), 1750:2100)
+rplot(x)
 
 hector::LAND_CFLUX()
 hector::OCEAN_CFLUX()
