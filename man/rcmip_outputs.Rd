@@ -4,10 +4,12 @@
 \alias{rcmip_outputs}
 \title{Retrieve results with RCMIP variable names and units}
 \usage{
-rcmip_outputs(core)
+rcmip_outputs(core, ...)
 }
 \arguments{
 \item{core}{Hector core (as returned by \code{\link[=run_scenario]{run_scenario()}})}
+
+\item{...}{Additional arguments to \code{\link[=fetchvars2]{fetchvars2()}}}
 }
 \description{
 Retrieve results with RCMIP variable names and units
