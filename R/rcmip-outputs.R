@@ -1,10 +1,11 @@
 #' Retrieve results with RCMIP variable names and units
 #'
 #' @param core Hector core (as returned by [run_scenario()])
+#' @param ... Additional arguments to [fetchvars2()]
 #' @return
 #' @author Alexey Shiklomanov
 #' @export
-rcmip_outputs <- function(core) {
+rcmip_outputs <- function(core, ...) {
   results <- fetchvars2(core, c(
     "CH4",
     "Ca",
@@ -20,8 +21,10 @@ rcmip_outputs <- function(core) {
     "NOX_emissions",
     "OC_emissions",
     "SO2_emissions",
-    "NMVOC_emissions"
-  ))
+    "NMVOC_emissions",
+    hector::LAND_CFLUX(),
+    hector::OCEAN_CFLUX()
+  ), ...)
 
   results_wide <- results %>%
     dplyr::select(-units) %>%
@@ -41,9 +44,14 @@ rcmip_outputs <- function(core) {
       ),
       # CCS = Cum. emissions - Atm. CO2
       # ... = -Atm. CO2 + Cum. emissions
-      `Carbon Sequestration` = ((Ca - Ca[2]) * -2.13) %>%
-        udunits2::ud.convert("1/12.01 Pg", "1/44.01 Mt") %>%
-        `+`(`Cumulative Emissions|CO2`)
+      ## `Carbon Sequestration` = ((Ca - Ca[2]) * -2.13) %>%
+      ##   udunits2::ud.convert("1/12.01 Pg", "1/44.01 Mt") %>%
+      ##   `+`(`Cumulative Emissions|CO2`)
+      # Alternative CCS calculation -- Land sink + ocean sink
+      `Carbon Sequestration` = udunits2::ud.convert(
+        atm_land_flux + atm_ocean_flux,
+        "1/12.01 Pg", "1/44.01 Mt"
+      )
     ) %>%
     dplyr::select(
       scenario = scenario,

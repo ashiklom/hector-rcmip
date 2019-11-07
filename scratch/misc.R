@@ -103,8 +103,14 @@ rplot(sn) +
 
 scenario <- "1pctCO2"
 s <- run_scenario(scenario)
-out <- rcmip_outputs(s)
+core <- s
+out <- rcmip_outputs(s, 1750:2100)
 rplot(out)
+
+hector::fetchvars(s, 2000:2010, "rh", "PgC year-1")
+
+hector::LAND_CFLUX()
+hector::OCEAN_CFLUX()
 
 input_sub <- rcmip_inputs() %>%
   dplyr::filter(Scenario == !!scenario)
