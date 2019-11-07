@@ -4,13 +4,10 @@
 \alias{run_scenario}
 \title{Run an RCMIP Scenario using Hector}
 \usage{
-run_scenario(scenario, control = FALSE, ...)
+run_scenario(scenario, ...)
 }
 \arguments{
 \item{scenario}{Name of scenario}
-
-\item{control}{(Logical) If \code{TRUE}, assume a control run and set more stuff
-to zero.}
 
 \item{...}{Additional arguments to \code{\link[=set_variable]{set_variable()}}}
 }
