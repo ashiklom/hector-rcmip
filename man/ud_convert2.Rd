@@ -6,8 +6,22 @@
 \usage{
 ud_convert2(x, from, to)
 }
+\arguments{
+\item{x}{Numeric value to convert}
+
+\item{from, to}{Units from/to which to convert. Syntax is identical to
+\code{\link[udunits2:ud.convert]{udunits2::ud.convert()}} except that chemical symbols in hard brackets
+(e.g. \code{[N2O]}) can be converted.}
+}
+\value{
+Values of \code{x} converted to \code{to} units.
+}
 \description{
 Chemical symbol-aware unit conversion
+}
+\examples{
+ud_convert2(5, "Pg [C]", "Pg [CO2]")
+#> 18.32223
 }
 \author{
 Alexey Shiklomanov
