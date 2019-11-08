@@ -23,7 +23,13 @@ rcmip_outputs <- function(core, ...) {
     "SO2_emissions",
     "NMVOC_emissions",
     hector::LAND_CFLUX(),
-    hector::OCEAN_CFLUX()
+    hector::OCEAN_CFLUX(),
+    # Anthro. RF is total - volcanic
+    hector::RF_VOL(),
+    # Anthro. aerosols
+    hector::RF_BC(),
+    hector::RF_OC(),
+    hector::RF_SO2()
   ), ...)
 
   results_wide <- results %>%
@@ -39,18 +45,29 @@ rcmip_outputs <- function(core, ...) {
         heatflux * 5100656e8 * (1 - 0.29), "W", "ZJ year-1"
       ),
       `Emissions|CO2` = ffi_emissions + luc_emissions,
-      `Cumulative Emissions|CO2` = udunits2::ud.convert(
+      `Cumulative Emissions|CO2` = ud_convert2(
         cumsum(`Emissions|CO2`), "1/12.01 Pg", "1/44.01 Mt"
       ),
-      # CCS = Cum. emissions - Atm. CO2
-      # ... = -Atm. CO2 + Cum. emissions
-      ## `Carbon Sequestration` = ((Ca - Ca[2]) * -2.13) %>%
-      ##   udunits2::ud.convert("1/12.01 Pg", "1/44.01 Mt") %>%
-      ##   `+`(`Cumulative Emissions|CO2`)
-      # Alternative CCS calculation -- Land sink + ocean sink
-      `Carbon Sequestration` = udunits2::ud.convert(
+      `Carbon Sequestration` = ud_convert2(
         atm_land_flux + atm_ocean_flux,
-        "1/12.01 Pg", "1/44.01 Mt"
+        "Pg [C]", "Mt [CO2]"
+      ),
+      `Radiative Forcing|Anthropogenic` = Ftot - Fvol,
+      `Radiative Forcing|Anthropogenic|Aerosols` = FBC + FOC + FSO2,
+      `Emissions|N2O` = tryCatch(
+        ud_convert2(
+          N2O_emissions,
+          "Tg [N] year-1", "Mt [N2O] year-1"
+        ),
+        error = function(e) NULL
+      ),
+      `Emissions|NOX` = ud_convert2(
+        NOX_emissions,
+        "Tg [N] year-1", "Mt [NO2] year-1"
+      ),
+      `Emissions|Sulfur` = ud_convert2(
+        SO2_emissions,
+        "Gg [S] year-1", "Mt [SO2] year-1"
       )
     ) %>%
     dplyr::select(
@@ -65,9 +82,21 @@ rcmip_outputs <- function(core, ...) {
       `Ocean Air Temperature Change` = Tgav_ocean_ST,
       `Cumulative Emissions|CO2`,
       # Effective radiative forcings...
+      # Emissions...
+      `Emissions|BC` = BC_emissions,
+      `Emissions|CH4` = dplyr::one_of("CH4_emissions"),
+      `Emissions|CO` = CO_emissions,
+      `Emissions|CO2`,
+      `Emissions|N2O` = dplyr::one_of("Emissions|N2O"),
+      ## `Emissions|NH3`, -- Not in Hector
+      `Emissions|NOX`,
+      `Emissions|OC` = OC_emissions,
+      `Emissions|Sulfur`,
+      `Emissions|VOC` = NMVOC_emissions,
+      # Radiative forcings...
       `Radiative Forcing` = Ftot,
-      ## `Radiative Forcing|Anthropogenic`
-      ## `Radiative Forcing|Anthropogenic|Aerosols`
+      `Radiative Forcing|Anthropogenic`,
+      `Radiative Forcing|Anthropogenic|Aerosols`,
       `Radiative Forcing|Anthropogenic|CO2` = FCO2
     )
 
