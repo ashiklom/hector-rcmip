@@ -157,3 +157,26 @@ input_sub %>%
   aes(x = year, y = value) +
   geom_line()
   ## facet_wrap(vars(Variable), scales = "free_y")
+
+rcmip2hector_df() %>%
+  select(hector_variable, rcmip_variable, hector_unit, rcmip_units) %>%
+  print(n = Inf)
+
+ud_convert2(5, "Gg [S]", "Mt [SO2]")
+
+iris %>%
+  as_tibble() %>%
+  select(spp = one_of("Species"), not_real = one_of("notacol"))
+
+scenario <- "abrupt-2xCO2"
+cmip6_model <- "CNRM-ESM2-1"
+
+input_sub %>%
+  distinct(Variable) %>%
+  pull()
+
+iris2 <- as_tibble(iris)
+
+iris2 %>%
+  mutate(Sepal.Area = Sepal.Length * Sepal.Width) %>%
+  mutate(newcol = tryCatch(Sepal.Area * 2, error = function(e) NULL))

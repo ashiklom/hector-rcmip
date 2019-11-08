@@ -1,7 +1,9 @@
 library(drake, exclude = c("gather", "expand"))
-library(hector.rcmip)
 library(tidyverse)
 library(here)
+
+devtools::load_all(here())
+expose_imports("hector.rcmip")
 
 options(nwarnings = 150)
 
@@ -32,11 +34,20 @@ plan <- drake_plan(
     bind_rows(out),
     transform = combine(out)
   ),
-  all_scenario_plot = ggplot(all_results) +
-    aes(x = year, y = value, color = scenario) +
+  everything_plot = ggplot(all_results) +
+    aes(x = year, y = value, color = cmip6_model) +
     geom_line() +
-    facet_wrap(vars(variable), scales = "free_y") +
-    scale_color_viridis_d() +
-    theme_bw()
+    facet_grid(
+      vars(variable),
+      vars(rcmip_scenario),
+      scales = "free_y"
+    ) +
+    scale_color_brewer(type = "q") +
+    theme_bw() +
+    theme(
+      strip.text.y = element_text(angle = 0),
+      axis.text.x = element_text(angle = 90),
+      legend.position = "bottom"
+    )
 )
 make(plan)

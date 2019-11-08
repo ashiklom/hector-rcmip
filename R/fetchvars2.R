@@ -13,7 +13,7 @@ fetchvars2 <- function(core, vars = NULL, dates = NULL, ...) {
   if (!is.null(vars)) {
     purrr::map_dfr(
       vars,
-      purrr::possibly(hector::fetchvars, NULL, quiet = FALSE),
+      purrr::possibly(hector::fetchvars, NULL),
       core = core,
       dates = dates,
       ...
