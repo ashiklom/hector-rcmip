@@ -8,6 +8,37 @@ abrupt <- run_scenario("abrupt-2xCO2")
 purrr::map_dfr(list(picontrol, pctco2, abrupt), fetchvars2) %>%
   rplot()
 
+library(tidyverse)
+devtools::load_all()
+abrupt <- run_scenario("abrupt-4xCO2")
+## out <- rcmip_outputs(abrupt, dates = 1750:2100)
+v <- c(hector::ATMOSPHERIC_CO2(), hector::LAND_CFLUX(), hector::OCEAN_CFLUX())
+out <- hector::fetchvars(abrupt, 1845:1865, v)
+ggplot(out) +
+  aes(x = year, y = value, color = scenario) +
+  geom_line() +
+  geom_point() +
+  facet_grid(vars(variable), scales = "free_y")
+
+write_csv(out, "~/Downloads/hector-earthc.csv")
+
+compare <- bind_rows(
+  deepocean = read_csv("~/Downloads/hector-deepocean.csv"),
+  deepocean_timestep = read_csv("~/Downloads/hector-deepocean-timestep.csv"),
+  earthc = read_csv("~/Downloads/hector-earthc.csv"),
+  .id = "config"
+)
+
+compare %>%
+  filter(config != "deepocean_timestep") %>%
+  ggplot() +
+  aes(x = year, y = value, color = config) +
+  geom_line() +
+  geom_point() +
+  facet_grid(vars(variable), scales = "free_y")
+
+ggsave("~/Downloads/abrupt-co2.png")
+
 ggplot2::ggsave("figures/control-1pct-abrupt.png", width = 7, height = 7)
 
 rplot(run_scenario(scenario))
