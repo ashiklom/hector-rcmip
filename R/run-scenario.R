@@ -138,10 +138,13 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
   conc <- subset_hector_var(input_sub, "N2O")
   if (nrow(emit)) {
     hc <- set_variable(hc, emit, ...)
-    # Also set natural emissions. These values are the Hector defaults (linear
-    # interpolation), but set manually to avoid issues with dates.
-    n2o_natural_emit <- approxfun(c(1765, 2000, hector_maxyear), c(11, 8, 5))(rundates)
-    hector::setvar(hc, rundates, "N2O_natural_emissions", n2o_natural_emit, "Tg N")
+  } else if (nrow(conc)) {
+    hc <- set_variable(hc, conc, ...)
+    if (min(conc$year) <= hector_minyear) {
+      # Also set the pre-industrial value
+      hector::setvar(hc, NA, hector::PREINDUSTRIAL_N2O(),
+                     conc$value[conc$year == hector_minyear], "ppb")
+    }
   }
 
   # Variables that can be handled naively
