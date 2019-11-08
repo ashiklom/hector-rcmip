@@ -1,11 +1,13 @@
 #' Run an RCMIP Scenario using Hector
 #'
 #' @param scenario Name of scenario
+#' @param cmip6_model CMIP6 model parameter set to use. If `NULL` (default), use
+#'   Hector defaults.
 #' @param ... Additional arguments to [set_variable()]
 #' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
 #' @export
-run_scenario <- function(scenario, ...) {
+run_scenario <- function(scenario, cmip6_model = NULL, ...) {
 
   hector_vars <- rcmip2hector_df()
 
@@ -36,6 +38,19 @@ run_scenario <- function(scenario, ...) {
   )
 
   hc <- hectortools::newcore_ini(ini, suppresslogging = TRUE, name = scenario)
+
+  if (!is.null(cmip6_model) && cmip6_model != "default") {
+    params <- cmip6_params() %>%
+      dplyr::filter(model == !!cmip6_model)
+    if (!nrow(params)) {
+      stop("CMIP6 model ", cmip6_model, " not found.")
+    }
+    purrr::walk(
+      c("S", "diff", "alpha", "volscl"),
+      ~hector::setvar(hc, NA, .x, params[[.x]],
+                      hector::getunits(.x))
+    )
+  }
 
   if (scenario %in% interp_scenarios) {
     # HACK: Need to extend the time series to get this to work properly
