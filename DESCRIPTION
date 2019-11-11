@@ -21,6 +21,8 @@ Imports:
     here,
     tibble,
     fuzzyjoin,
-    udunits2
+    udunits2,
+    progress,
+    purrr
 Suggests: 
     testthat
