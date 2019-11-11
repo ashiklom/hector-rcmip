@@ -48,9 +48,21 @@ run_with_param <- function(core, pS, pdiff, palpha,
                            .pb = NULL, ...) {
   if (!is.null(.pb)) .pb$tick()
   hector::reset(core)
-  hector::setvar(core, NA, ECS(), pS, getunits(ECS()))
-  hector::setvar(core, NA, DIFFUSIVITY(), pdiff, getunits(DIFFUSIVITY()))
-  hector::setvar(core, NA, VOLCANIC_SCALE(), palpha, getunits(VOLCANIC_SCALE()))
+  hector::setvar(
+    core, NA,
+    hector::ECS(), pS,
+    hector::getunits(hector::ECS())
+  )
+  hector::setvar(
+    core, NA,
+    hector::DIFFUSIVITY(), pdiff,
+    hector::getunits(hector::DIFFUSIVITY())
+  )
+  hector::setvar(
+    core, NA,
+    hector::VOLCANIC_SCALE(), palpha,
+    hector::getunits(hector::VOLCANIC_SCALE())
+  )
   hector::run(core, max(dates))
   out <- rcmip_outputs(core, dates = dates, ...)
   if (include_params) {
