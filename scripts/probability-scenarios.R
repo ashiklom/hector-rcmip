@@ -1,13 +1,15 @@
 library(hector.rcmip)
 library(tidyverse)
 library(hector)
-library(future, exclude = "run")
 library(furrr)
 library(data.table, exclude = c("between", "first", "last", "transpose"))
 library(fs)
 library(here)
+library(fst)
 
-plan(future.callr::callr)
+requireNamespace("future", quietly = TRUE)
+
+future::plan(future.callr::callr)
 
 outdir <- dir_create(here("output"))
 
@@ -31,6 +33,8 @@ results_dt <- all_results %>%
   map(setDT) %>%
   rbindlist()
 
+write_fst(results_dt, path(outdir, "raw-probability-results.fst"))
+
 results_summary <- results_dt %>%
   .[, .(Mean = mean(value),
         SD = sd(value),
@@ -42,7 +46,8 @@ results_summary <- results_dt %>%
         q75 = quantile(value, 0.75),
         q90 = quantile(value, 0.9),
         q95 = quantile(value, 0.95),
-        q975 = quantile(value, 0.975)),
+        q975 = quantile(value, 0.975)
+        ),
     .(scenario, year, variable)]
 
 write_csv(results_summary, path(outdir, "probability-results.csv"))
@@ -54,3 +59,11 @@ results_long <- results_summary %>%
   )
 
 write_csv(results_long, path(outdir, "probability-results-long.csv"))
+
+probability_results <- fread(path(outdir, "probability-results-long.csv")) %>%
+  .[year >= 1850 & year <= 2100] %>%
+  dcast(scenario + variable + stat ~ year, value.var = "value") %>%
+  .[, ClimateModel := sprintf("hector|55980ace|DEFAULT-HISTCALIB-%s", stat)] %>%
+  .[, Scenario := gsub("-p$", "", scenario)] %>%
+  .[, Region := "World"] %>%
+  setnames("variable", "Variable")
