@@ -1,67 +1,56 @@
 library(hector.rcmip)
 library(tidyverse)
 library(hector)
+library(future, exclude = "run")
+library(furrr)
+library(data.table, exclude = c("between", "first", "last", "transpose"))
+library(fs)
+library(here)
 
-posteriors <- read_csv("data-raw/brick-posteriors/emissions_17k_posteriorSamples.csv")
+plan(future.callr::callr)
 
-run_with_param <- function(core, pS, pdiff, palpha, .pb = NULL) {
-  if (!is.null(.pb)) .pb$tick()
-  hector::reset(core)
-  hector::setvar(core, NA, ECS(), pS, getunits(ECS()))
-  hector::setvar(core, NA, DIFFUSIVITY(), pdiff, getunits(DIFFUSIVITY()))
-  hector::setvar(core, NA, VOLCANIC_SCALE(), palpha, getunits(VOLCANIC_SCALE()))
-  hector::run(core)
-  dplyr::mutate(
-    rcmip_outputs(core, dates = 1750:2100),
-    param_ecs = pS,
-    param_diffusivity = pdiff,
-    param_volscl = palpha
+outdir <- dir_create(here("output"))
+
+scenarios <- c(
+  "piControl", "esm-piControl", "1pctCO2", "1pctCO2-4xext",
+  "abrupt-4xCO2", "abrupt-2xCO2", "abrupt-0p5xCO2", "historical",
+  "ssp119", "ssp585"
+  ## "esm-hist", "esm-ssp119", "esm-ssp585"
+)
+
+all_results <- future_map(
+  scenarios,
+  possibly(run_probability, NULL, quiet = FALSE),
+  n = 1000,
+  .progress = TRUE
+)
+
+results_dt <- all_results %>%
+  map("results") %>%
+  do.call(c, .) %>%
+  map(setDT) %>%
+  rbindlist()
+
+results_summary <- results_dt %>%
+  .[, .(Mean = mean(value),
+        SD = sd(value),
+        q025 = quantile(value, 0.025),
+        q05 = quantile(value, 0.05),
+        q10 = quantile(value, 0.1),
+        q25 = quantile(value, 0.25),
+        q50 = quantile(value, 0.50),
+        q75 = quantile(value, 0.75),
+        q90 = quantile(value, 0.9),
+        q95 = quantile(value, 0.95),
+        q975 = quantile(value, 0.975)),
+    .(scenario, year, variable)]
+
+write_csv(results_summary, path(outdir, "probability-results.csv"))
+
+results_long <- results_summary %>%
+  melt(
+    id.vars = c("scenario", "year", "variable"),
+    variable.name = "stat"
   )
-}
 
-hc <- system.file("input", "hector_rcp45.ini", package = "hector") %>%
-  newcore(suppresslogging = TRUE)
-p1 <- posteriors[1,]
-d1 <- run_with_param(hc, p1[[1]], p1[[2]], p1[[3]])
-
-n <- 1000
-pb <- progress::progress_bar$new(total = n)
-post_inputs <- posteriors %>%
-  sample_n(n, replace = FALSE) %>%
-  mutate(
-    results = pmap(list(
-      pS = S.temperature,
-      pdiff = diff.temperature,
-      palpha = alpha.temperature
-    ), run_with_param, core = hc, .pb = pb)
-  )
-
-outputs <- post_inputs %>%
-  unnest(results)
-
-out_summary <- outputs %>%
-  select(S.temperature:alpha.temperature, year, variable, value) %>%
-  group_by(year, variable) %>%
-  summarize(
-    Mean = mean(value),
-    SD = sd(value),
-    lo = quantile(value, 0.025),
-    hi = quantile(value, 0.975)
-  ) %>%
-  ungroup()
-
-out_summary %>%
-  filter(variable %in% c("Heat Uptake|Ocean", "Atmospheric Concentrations|CO2",
-                         "Carbon Sequestration", "Ocean Air Temperature Change",
-                         "Radiative Forcing|Anthropogenic", "Radiative Forcing|Anthropogenic|CO2",
-                         "Surface Air Temperature Change")) %>%
-  ggplot() +
-  aes(x = year, y = Mean, ymin = lo, ymax = hi) +
-  geom_ribbon(fill = "gray70", alpha = 0.8) +
-  geom_line(color = "black") +
-  facet_wrap(vars(variable), scales = "free_y") +
-  ylab("Mean and 95% CI") +
-  theme_bw() +
-  theme(axis.title.x = element_blank())
-
-ggsave("figures/probability.png", width = 9, height = 7)
+write_csv(results_long, path(outdir, "probability-results-long.csv"))
