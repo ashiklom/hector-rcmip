@@ -9,6 +9,46 @@
 #' @export
 run_scenario <- function(scenario, cmip6_model = NULL, ...) {
 
+  basefile <- rcmip_ini()
+  hc <- hector::newcore(basefile, suppresslogging = TRUE, name = scenario)
+
+  hc <- set_scenario(hc, scenario = scenario, ...)
+
+  if (!is.null(cmip6_model) && cmip6_model != "default") {
+    params <- cmip6_params() %>%
+      dplyr::filter(model == !!cmip6_model)
+    if (!nrow(params)) {
+      stop("CMIP6 model ", cmip6_model, " not found.")
+    }
+    purrr::walk(
+      c("S", "diff", "alpha", "volscl"),
+      ~hector::setvar(hc, NA, .x, params[[.x]],
+                      hector::getunits(.x))
+    )
+  }
+
+  tryCatch(
+    invisible(hector::run(hc, maxyear)),
+    error = function(e) {
+      stop(
+        "Running scenario ", scenario,
+        " failed with the following error:\n",
+        conditionMessage(e)
+      )
+    }
+  )
+
+}
+
+#' Add scenario data to a Hector core
+#'
+#' @param hc Hector core (see [hector::newcore()])
+#' @inheritParams run_scenario
+#' @return Hector core (invisibly)
+#' @author Alexey Shiklomanov
+#' @export
+set_scenario <- function(hc, scenario, ...) {
+
   hector_vars <- rcmip2hector_df()
 
   hector_minyear <- 1745
@@ -27,30 +67,12 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
   maxyear <- min(max(input_sub$year), hector_maxyear)
   rundates <- seq(minyear, maxyear)
 
-  basefile <- rcmip_ini()
-  ini <- hectortools::read_ini(basefile)
-
   # Special case scenarios. These require inputs to be interpolated back to start date.
   abrupt_scenarios <- sprintf("abrupt-%sCO2", c("0p5x", "2x", "4x"))
   interp_scenarios <- c(
     "piControl", "1pctCO2", "1pctCO2-4xext",
     abrupt_scenarios
   )
-
-  hc <- hectortools::newcore_ini(ini, suppresslogging = TRUE, name = scenario)
-
-  if (!is.null(cmip6_model) && cmip6_model != "default") {
-    params <- cmip6_params() %>%
-      dplyr::filter(model == !!cmip6_model)
-    if (!nrow(params)) {
-      stop("CMIP6 model ", cmip6_model, " not found.")
-    }
-    purrr::walk(
-      c("S", "diff", "alpha", "volscl"),
-      ~hector::setvar(hc, NA, .x, params[[.x]],
-                      hector::getunits(.x))
-    )
-  }
 
   if (scenario %in% interp_scenarios) {
     # HACK: Need to extend the time series to get this to work properly
@@ -176,7 +198,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
     dplyr::transmute(halocarbon = gsub("_halocarbon", "", hector_component),
                      halocarbon_rxp = paste0(halocarbon, "$")) %>%
     dplyr::distinct(halocarbon, halocarbon_rxp)
- 
+
   halocarbon_dict <- input_sub %>%
     dplyr::distinct(Variable) %>%
     fuzzyjoin::regex_inner_join(halocarbons, c("Variable" = "halocarbon_rxp")) %>%
@@ -188,7 +210,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
       ),
       hector_variable = paste(halocarbon, datatype, sep = "_")
     )
- 
+
   for (i in seq_len(nrow(halocarbon_dict))) {
     irow <- halocarbon_dict[i,]
     i_rcmip_var <- irow[["Variable"]]
@@ -206,16 +228,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
     )
   }
 
-  tryCatch(
-    invisible(hector::run(hc, maxyear)),
-    error = function(e) {
-      stop(
-        "Running scenario ", scenario,
-        " failed with the following error:\n",
-        conditionMessage(e)
-      )
-    }
-  )
+  invisible(hc)
 
 }
 
