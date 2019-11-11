@@ -12,6 +12,8 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
   basefile <- rcmip_ini()
   hc <- hector::newcore(basefile, suppresslogging = TRUE, name = scenario)
 
+  hector_maxyear <- 2100
+
   hc <- set_scenario(hc, scenario = scenario, ...)
 
   if (!is.null(cmip6_model) && cmip6_model != "default") {
@@ -28,7 +30,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, ...) {
   }
 
   tryCatch(
-    invisible(hector::run(hc, maxyear)),
+    invisible(hector::run(hc, hector_maxyear)),
     error = function(e) {
       stop(
         "Running scenario ", scenario,
