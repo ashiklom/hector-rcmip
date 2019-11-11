@@ -5,7 +5,7 @@
 \title{Thin wrapper around \code{\link[hector:fetchvars]{hector::fetchvars()}} that automatically grabs start and
 end dates}
 \usage{
-fetchvars2(core, vars = NULL, dates = NULL, ...)
+fetchvars2(core, vars = NULL, dates = NULL, quiet = FALSE, ...)
 }
 \arguments{
 \item{core}{Hector core object}
@@ -15,6 +15,9 @@ be fetched in the result.}
 
 \item{dates}{Vector of dates to fetch.  This will be automatically trimmed to
 dates that are between the start date and the latest date currently run.}
+
+\item{quiet}{Hide errors (\code{TRUE}, the default), or display them
+as they occur?}
 
 \item{...}{Additional arguments to \code{\link[hector:fetchvars]{hector::fetchvars()}}}
 }
