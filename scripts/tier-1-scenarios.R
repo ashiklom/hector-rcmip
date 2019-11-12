@@ -6,13 +6,17 @@ library(fs)
 library(fst)
 library(data.table, exclude = c("between", "first", "last", "transpose"))
 
+stopifnot(
+  requireNamespace("reshape2", quietly = TRUE),
+  requireNamespace("git2r", quietly = TRUE)
+)
+
 devtools::load_all(here())
 expose_imports("hector.rcmip")
 
 outdir <- dir_create(here("output"))
 figdir <- dir_create(here("figures"))
 
-requireNamespace("git2r", quietly = TRUE)
 hector_version <- substr(git2r::revparse_single("../hector", "HEAD")$sha, 0, 8)
 
 scenarios <- c(
@@ -73,8 +77,7 @@ plan <- bind_plans(plan, drake_plan(
     left_join(distinct(meta_model, rcmip_scenario, cmip6_model, ClimateModel),
               c("Scenario" = "rcmip_scenario", "cmip6_model")) %>%
     select(ClimateModel, Model, Scenario, Region, Variable, Unit,
-           matches("[[:digit:]]{4}")) %>%
-    write_csv(file_out(!!path(outdir, "your_data.csv"))),
+           matches("[[:digit:]]{4}")),
   cmip_params_form = cmip6_params() %>%
     mutate(
       "Model Configuration Description" = glue(
@@ -125,8 +128,7 @@ plan <- bind_plans(plan, drake_plan(
       `Project`,
       `Name of Person`,
       `Literature Reference`
-    ) %>%
-    write_tsv(file_out(!!path(outdir, "meta_model.tsv")))
+    )
 ))
 
 ### Probability runs
@@ -163,8 +165,72 @@ plan <- bind_plans(plan, drake_plan(
   probability_long = melt(
     probability_summary,
     id.vars = c("scenario", "year", "variable"),
-    variable.name = "stat'"
+    variable.name = "stat"
   )
+))
+
+### Formatting probability output
+plan <- bind_plans(plan, drake_plan(
+ probability_formatted = probability_long %>%
+  filter(year >= 1850, year <= 2100) %>%
+  reshape2::dcast(scenario + variable + stat ~ year, value.var = "value") %>%
+  as_tibble() %>%
+  rename(Variable = variable) %>%
+  mutate(
+    ClimateModel = sprintf("hector|%s|HISTCALIB-%s", hector_version, stat),
+    Scenario = str_remove(scenario, "-p$")
+    ) %>%
+  left_join(scenario_df, "Scenario") %>%
+  left_join(rcmip_vars, "Variable") %>%
+  mutate(Region = "World") %>%
+  select(ClimateModel, Model, Scenario, Region, Variable, Unit,
+         matches("[[:digit:]]{4}")),
+ probability_meta = probability_formatted %>%
+   distinct(ClimateModel, Scenario) %>%
+   mutate(
+     stat = case_when(
+       grepl("-Mean$", ClimateModel) ~ "mean",
+       grepl("-SD$", ClimateModel) ~ "standard deviation",
+       grepl("-q025$", ClimateModel) ~ "2.5% quantile",
+       grepl("-q05$", ClimateModel) ~ "5% quantile",
+       grepl("-q10$", ClimateModel) ~ "10% quantile",
+       grepl("-q25$", ClimateModel) ~ "25% quantile",
+       grepl("-q50$", ClimateModel) ~ "50% quantile",
+       grepl("-q75$", ClimateModel) ~ "75% quantile",
+       grepl("-q90$", ClimateModel) ~ "90% quantile",
+       grepl("-q95$", ClimateModel) ~ "95% quantile",
+       grepl("-q975$", ClimateModel) ~ "97.5% quantile",
+       TRUE ~ NA_character_
+     )
+   ) %>%
+   transmute(
+     ClimateModel = ClimateModel,
+     `Climate Model Name` =
+       gsub("^(.*)\\|(.*)\\|(.*)$", "\\1", ClimateModel),
+     `Climate Model Version` =
+       gsub("^(.*)\\|(.*)\\|(.*)$", "\\2", ClimateModel),
+     `Climate Model Configuration Label` =
+       gsub("^(.*)\\|(.*)\\|(.*)$", "\\3", ClimateModel),
+     `ECS` = NA_real_,
+     `Model Configuration Description` = glue(
+       "Hector with ECS, ocean heat diffusivity, and aerosol scaling factor ",
+       "calibrated against historical observations: ",
+       "Parameter uncertainty ensemble {stat} (1000 simulations)."
+     ),
+     `Project` = unique(meta_model[["Project"]]),
+     `Name of Person` = unique(meta_model[["Name of Person"]]),
+     `Literature Reference` = unique(meta_model[["Literature Reference"]])
+   )
+))
+
+### Final output files
+plan <- bind_plans(plan, drake_plan(
+  your_data_csv = all_results_rcmip_format %>%
+    bind_rows(probability_formatted) %>%
+    write_csv(file_out(!!path(outdir, "your_data.csv"))),
+  meta_model_tsv = meta_model_write %>%
+    bind_rows(probability_meta) %>%
+    write_tsv(file_out(!!path(outdir, "meta_model.tsv")))
 ))
 
 ### Make plan
