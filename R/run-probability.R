@@ -42,9 +42,18 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
                            dates = 1750:2100,
                            include_params = TRUE,
                            .pb = NULL, ...) {
+
   if (!is.null(.pb)) .pb$tick()
-  core <- hector::newcore(
-    rcmip_ini(),
+
+  ini <- hectortools::read_ini(rcmip_ini())
+  if (grepl("piControl", scenario)) {
+    # For preindustrial control runs, fix natural N2O emissions to a constant
+    # value. 11 TgN here is the Hector preindustrial default.
+    ini$N2O$N2O_natural_emissions <- subset(ini$N2O$N2O_natural_emissions, date == date[1])
+  }
+
+  core <- hectortools::newcore_ini(
+    ini,
     suppresslogging = TRUE,
     name = paste0(scenario, "-p")
   )
