@@ -77,7 +77,7 @@ plan <- bind_plans(plan, drake_plan(
     left_join(distinct(meta_model, rcmip_scenario, cmip6_model, ClimateModel),
               c("Scenario" = "rcmip_scenario", "cmip6_model")) %>%
     select(ClimateModel, Model, Scenario, Region, Variable, Unit,
-           matches("[[:digit:]]{4}")),
+           dplyr::matches("[[:digit:]]{4}")),
   cmip_params_form = cmip6_params() %>%
     mutate(
       "Model Configuration Description" = glue(
@@ -139,9 +139,11 @@ fast_bind <- function(...) {
     data.table::rbindlist()
 }
 
+.datatable.aware <- TRUE #nolint
+
 plan <- bind_plans(plan, drake_plan(
   probability = target(
-    run_probability(.scenario, n = 1000),
+    run_probability(.scenario, n = 1000, quiet = TRUE),
     transform = map(.scenario = !!scenarios)
   ),
   probability_all = target(
@@ -149,7 +151,7 @@ plan <- bind_plans(plan, drake_plan(
     transform = combine(probability),
     format = "fst"
   ),
-  probability_summary = setDT(probability_all)[,.(
+  probability_summary = as.data.table(probability_all)[,.(
     Mean = mean(value),
     SD = sd(value),
     q025 = quantile(value, 0.025),
@@ -184,7 +186,7 @@ plan <- bind_plans(plan, drake_plan(
   left_join(rcmip_vars, "Variable") %>%
   mutate(Region = "World") %>%
   select(ClimateModel, Model, Scenario, Region, Variable, Unit,
-         matches("[[:digit:]]{4}")),
+         dplyr::matches("[[:digit:]]{4}")),
  probability_meta = probability_formatted %>%
    distinct(ClimateModel, Scenario) %>%
    mutate(
@@ -233,6 +235,55 @@ plan <- bind_plans(plan, drake_plan(
     write_tsv(file_out(!!path(outdir, "meta_model.tsv")))
 ))
 
+### Diagnostic plots
+scenario_plot <- function(dat, scenario) {
+  dat_sub <- dat %>%
+    pivot_longer(dplyr::matches("[[:digit:]]{4}"),
+                 names_to = "year", values_to = "value",
+                 names_ptypes = list(year = numeric())) %>%
+    filter(Scenario == scenario)
+
+  dat_scalar <- dat_sub %>%
+    filter(!grepl("HISTCALIB", ClimateModel)) %>%
+    mutate(
+      calib_model = gsub("^.*\\|.*\\|", "", ClimateModel) %>%
+        gsub("^CMIP6-", "", .) %>%
+        gsub("-CALIB$", "", .)
+    )
+
+  dat_prob <- dat_sub %>%
+    filter(grepl("HISTCALIB", ClimateModel)) %>%
+    mutate(stat = gsub(".*\\|HISTCALIB-(.*)", "\\1", ClimateModel)) %>%
+    select(-ClimateModel) %>%
+    pivot_wider(names_from = "stat", values_from = "value")
+
+  fcol <- "gray25"
+  plt <- ggplot(dat_prob) +
+    aes(x = year) +
+    geom_ribbon(aes(ymin = q025, ymax = q975),
+                fill = fcol, alpha = 0.2) +
+    geom_ribbon(aes(ymin = q05, ymax = q95),
+                fill = fcol, alpha = 0.2) +
+    geom_ribbon(aes(ymin = q10, ymax = q90),
+                fill = fcol, alpha = 0.2) +
+    geom_ribbon(aes(ymin = q25, ymax = q75),
+                fill = fcol, alpha = 0.2) +
+    geom_line(aes(y = Mean, color = "probability", linetype = "probability")) +
+    geom_line(aes(y = value, color = calib_model, linetype = calib_model),
+              data = dat_scalar) +
+    facet_wrap(vars(Variable), scale = "free_y") +
+    ggtitle(scenario) +
+    theme_bw()
+  print(plt)
+}
+plan <- bind_plans(plan, drake_plan(
+  diagnostic_plots = {
+    pdf(file_out("figures/final-scenario-plots.pdf"), width = 16, height = 9.5)
+    walk(scenarios, scenario_plot, dat = your_data_csv)
+    dev.off()
+  }
+))
+
 ### Make plan
 future::plan(future.callr::callr)
-make(plan, parallelism = "future", jobs = parallel::detectCores())
+make(plan)
