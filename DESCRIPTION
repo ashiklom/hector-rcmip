@@ -23,6 +23,7 @@ Imports:
     fuzzyjoin,
     udunits2,
     progress,
-    purrr
+    purrr,
+    furrr
 Suggests: 
     testthat

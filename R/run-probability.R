@@ -7,11 +7,6 @@
 #' @export
 run_probability <- function(scenario, n = 1000, ...) {
 
-  hc <- hector::newcore(
-    rcmip_ini(), suppresslogging = TRUE, name = paste0(scenario, "-p")
-  )
-
-  set_scenario(hc, scenario = scenario, ...)
   params <- readr::read_csv(here::here(
     "data-raw", "brick-posteriors", "emissions_17k_posteriorSamples.csv"
   ), col_types = readr::cols(.default = "d"))
@@ -21,17 +16,18 @@ run_probability <- function(scenario, n = 1000, ...) {
   pb <- progress::progress_bar$new(total = n)
   results <- params_sub %>%
     dplyr::mutate(
-      results = purrr::pmap(list(
+      results = furrr::future_pmap(list(
         pS = S.temperature,
         pdiff = diff.temperature,
         palpha = alpha.temperature
-      ), run_with_param, core = hc, .pb = pb)
+      ), run_with_param,
+      scenario = scenario, .pb = pb, ...)
     )
 }
 
 #' Run Hector with specific parameter values
 #'
-#' @param core Hector `core` object
+#' @param scenario Hector scenario
 #' @param pS Equilibrium climate sensitivity (`S`)
 #' @param pdiff Heat diffusivity (`diff`)
 #' @param palpha Aerosol scaling factor (`alpha`)
@@ -42,12 +38,18 @@ run_probability <- function(scenario, n = 1000, ...) {
 #' @return `data.frame` of results
 #' @author Alexey Shiklomanov
 #' @export
-run_with_param <- function(core, pS, pdiff, palpha,
+run_with_param <- function(scenario, pS, pdiff, palpha,
                            dates = 1750:2100,
                            include_params = TRUE,
                            .pb = NULL, ...) {
   if (!is.null(.pb)) .pb$tick()
-  hector::reset(core)
+  core <- hector::newcore(
+    rcmip_ini(),
+    suppresslogging = TRUE,
+    name = paste0(scenario, "-p")
+  )
+  maxdate <- set_scenario(core, scenario = scenario)
+  dates <- seq(min(dates), min(maxdate, max(dates)))
   hector::setvar(
     core, NA,
     hector::ECS(), pS,
@@ -63,7 +65,7 @@ run_with_param <- function(core, pS, pdiff, palpha,
     hector::VOLCANIC_SCALE(), palpha,
     hector::getunits(hector::VOLCANIC_SCALE())
   )
-  hector::run(core, max(dates))
+  hector::run(core, maxdate)
   out <- rcmip_outputs(core, dates = dates, ...)
   if (include_params) {
     out <- dplyr::mutate(
