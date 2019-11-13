@@ -180,3 +180,65 @@ iris2 <- as_tibble(iris)
 iris2 %>%
   mutate(Sepal.Area = Sepal.Length * Sepal.Width) %>%
   mutate(newcol = tryCatch(Sepal.Area * 2, error = function(e) NULL))
+
+##################################################
+inp <- rcmip_inputs()
+
+inp %>%
+  filter(Scenario == "1pctCO2-4xext") %>%
+  ggplot() +
+  aes(x = year, y = value) +
+  geom_line() +
+  facet_wrap(vars(Variable), scales = "free_y")
+
+rcmip_inputs() %>%
+  filter(Scenario == "esm-piControl") %>%
+  ggplot() +
+  aes(x = year, y = value) +
+  geom_line() +
+  facet_wrap(vars(Variable), scales = "free_y")
+
+devtools::load_all()
+library(hector)
+library(tidyverse)
+
+out <- run_scenario("esm-piControl")
+rf <- fetchvars2(out, c(RF_N2O(), RF_CH4(), RF_CO2(), RF_TOTAL()))
+ggplot(rf) +
+  aes(x = year, y = value, color = variable) +
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = "dashed")
+ggsave("figures/picontrol.png")
+
+core <- run_scenario("1pctCO2")
+outvars <- c(ATMOSPHERIC_CO2(), LAND_CFLUX(), OCEAN_CFLUX()
+             ## VEG_C(), SOIL_C(), DETRITUS_C(), NPP()
+             )
+results <- fetchvars2(core, outvars, dates = 1750:2100)
+r <- map_dfr(
+  seq(2030, 2100),
+  function(y) {
+    reset(core, y - 1)
+    run(core, y)
+    dat <- fetchvars(
+      core,
+      NA,
+      c(ATM_OCEAN_FLUX_HL(), ATM_OCEAN_FLUX_LL(),
+        CO3_HL(), CO3_LL(), DIC_HL(), DIC_LL())
+    )
+    dat$year <- y
+    dat
+  }
+)
+ggplot(bind_rows(results, r) %>% filter(year > 2000)) +
+  aes(x = year, y = value) +
+  geom_line() +
+  facet_wrap(vars(variable), scales = "free_y")
+ggsave("figures/1pctco2-diagnostics.png")
+
+results %>%
+  filter(year >= 2070, year <= 2085) %>%
+  ggplot() +
+  aes(x = year, y = value) +
+  geom_line() +
+  facet_wrap(vars(variable), scales = "free_y")

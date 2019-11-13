@@ -168,6 +168,11 @@ set_scenario <- function(hc, scenario, ...) {
                      conc$value[conc$year == hector_minyear], "ppb")
     }
   }
+  if (grepl("piControl", scenario)) {
+    # For preindustrial control runs, fix natural N2O emissions to a constant
+    # value. 11 TgN here is the Hector preindustrial default.
+    hector::setvar(hc, rundates, "N2O_natural_emissions", 11, "TgN")
+  }
 
   # Variables that can be handled naively
   # NOTE: All of these will assume a default value of zero
