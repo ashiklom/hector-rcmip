@@ -6,6 +6,9 @@ library(fs)
 library(fst)
 library(data.table, exclude = c("between", "first", "last", "transpose"))
 
+# Make `data.table` bracket notation work.
+.datatable.aware <- TRUE #nolint
+
 stopifnot(
   requireNamespace("reshape2", quietly = TRUE),
   requireNamespace("git2r", quietly = TRUE)
@@ -138,8 +141,6 @@ fast_bind <- function(...) {
     purrr::map(data.table::setDT) %>%
     data.table::rbindlist()
 }
-
-.datatable.aware <- TRUE #nolint
 
 plan <- bind_plans(plan, drake_plan(
   probability = target(
