@@ -4,11 +4,19 @@
 \alias{run_with_param}
 \title{Run Hector with specific parameter values}
 \usage{
-run_with_param(core, pS, pdiff, palpha, dates = 1750:2100,
-  include_params = TRUE, .pb = NULL, ...)
+run_with_param(
+  scenario,
+  pS,
+  pdiff,
+  palpha,
+  dates = 1750:2100,
+  include_params = TRUE,
+  .pb = NULL,
+  ...
+)
 }
 \arguments{
-\item{core}{Hector \code{core} object}
+\item{scenario}{Hector scenario}
 
 \item{pS}{Equilibrium climate sensitivity (\code{S})}
 

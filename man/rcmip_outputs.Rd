@@ -11,6 +11,9 @@ rcmip_outputs(core, ...)
 
 \item{...}{Additional arguments to \code{\link[=fetchvars2]{fetchvars2()}}}
 }
+\value{
+
+}
 \description{
 Retrieve results with RCMIP variable names and units
 }

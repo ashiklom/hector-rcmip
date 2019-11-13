@@ -11,7 +11,7 @@ ud_convert2(x, from, to)
 
 \item{from, to}{Units from/to which to convert. Syntax is identical to
 \code{\link[udunits2:ud.convert]{udunits2::ud.convert()}} except that chemical symbols in hard brackets
-(e.g. \code{[N2O]}) can be converted.}
+(e.g. \verb{[N2O]}) can be converted.}
 }
 \value{
 Values of \code{x} converted to \code{to} units.

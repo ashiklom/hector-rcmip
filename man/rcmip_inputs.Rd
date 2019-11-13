@@ -6,6 +6,9 @@
 \usage{
 rcmip_inputs()
 }
+\value{
+
+}
 \description{
 Long RCMIP inputs data.frame
 }

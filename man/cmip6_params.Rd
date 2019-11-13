@@ -6,6 +6,9 @@
 \usage{
 cmip6_params()
 }
+\value{
+
+}
 \description{
 Hector calibrated CMIP6 parameters
 }

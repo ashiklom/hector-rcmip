@@ -11,6 +11,9 @@ implied_emissions(concdata, component)
 
 \item{component}{(character) Name of component}
 }
+\value{
+
+}
 \description{
 Calculate implied emissions from concentration data
 }

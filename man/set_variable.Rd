@@ -4,8 +4,13 @@
 \alias{set_variable}
 \title{Set Hector variable to RCMIP data}
 \usage{
-set_variable(core, input_data, varname = NULL,
-  hector_vars = rcmip2hector_df(), interpolate = TRUE)
+set_variable(
+  core,
+  input_data,
+  varname = NULL,
+  hector_vars = rcmip2hector_df(),
+  interpolate = TRUE
+)
 }
 \arguments{
 \item{core}{Hector core object}
