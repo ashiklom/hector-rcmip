@@ -10,7 +10,14 @@
 run_scenario <- function(scenario, cmip6_model = NULL, ...) {
 
   basefile <- rcmip_ini()
-  hc <- hector::newcore(basefile, suppresslogging = TRUE, name = scenario)
+  ini <- hectortools::read_ini(basefile)
+  if (grepl("piControl", scenario)) {
+    # For preindustrial control runs, fix natural N2O emissions to a constant
+    # value. 11 TgN here is the Hector preindustrial default.
+    ini$N2O$N2O_natural_emissions <- subset(ini$N2O$N2O_natural_emissions, date == date[1])
+  }
+
+  hc <- hectortools::newcore_ini(ini, suppresslogging = TRUE, name = scenario)
 
   maxyear <- set_scenario(hc, scenario = scenario, ...)
 
@@ -167,11 +174,6 @@ set_scenario <- function(hc, scenario, ...) {
       hector::setvar(hc, NA, hector::PREINDUSTRIAL_N2O(),
                      conc$value[conc$year == hector_minyear], "ppb")
     }
-  }
-  if (grepl("piControl", scenario)) {
-    # For preindustrial control runs, fix natural N2O emissions to a constant
-    # value. 11 TgN here is the Hector preindustrial default.
-    hector::setvar(hc, rundates, "N2O_natural_emissions", 11, "TgN")
   }
 
   # Variables that can be handled naively
