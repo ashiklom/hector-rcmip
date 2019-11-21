@@ -5,8 +5,6 @@ library(glue, exclude = "collapse")
 library(fs)
 library(data.table, exclude = c("between", "first", "last", "transpose"))
 
-options(clustermq.scheduler = "multicore")
-
 # Make `data.table` bracket notation work.
 .datatable.aware <- TRUE #nolint
 
@@ -49,7 +47,8 @@ plan <- drake_plan(
     transform = cross(scenario = !!scenarios, model = !!models)
   ),
   all_results = target(
-    bind_rows(out),
+    bind_rows(out) %>%
+      filter(year >= 1850, year <= 2100),
     transform = combine(out)
   ),
   everything_plot = ggplot(all_results) +
@@ -85,7 +84,7 @@ plan <- bind_plans(plan, drake_plan(
     pivot_wider(names_from = "year", values_from = "value") %>%
     left_join(scenario_df, "Scenario") %>%
     left_join(rcmip_vars, "Variable") %>%
-    left_join(distinct(meta_model, rcmip_scenario, cmip6_model, ClimateModel),
+    left_join(distinct(meta_model, cmip6_model, ClimateModel),
               c("Scenario" = "rcmip_scenario", "cmip6_model")) %>%
     select(ClimateModel, Model, Scenario, Region, Variable, Unit,
            dplyr::matches("[[:digit:]]{4}")),
@@ -111,7 +110,7 @@ plan <- bind_plans(plan, drake_plan(
       )
     ),
   meta_model = all_results %>%
-    distinct(rcmip_scenario, cmip6_model) %>%
+    distinct(cmip6_model) %>%
     left_join(cmip_params_form, "cmip6_model") %>%
     mutate(
       "Climate Model Name" = "hector",
@@ -143,9 +142,9 @@ plan <- bind_plans(plan, drake_plan(
 ))
 
 ### Probability runs
-fast_bind <- function(...) {
-  purrr::map(c(...), data.table::setDT) %>%
-    data.table::rbindlist()
+fast_bind <- function(x) {
+  x <- purrr::map(x, data.table::setDT)
+  data.table::rbindlist(x)
 }
 
 plan <- bind_plans(plan, drake_plan(
@@ -165,31 +164,30 @@ plan <- bind_plans(plan, drake_plan(
     dynamic = map(probability_param_draws, isamps),
     transform = map(scenario = !!scenarios)
   ),
-  probability_run_readd = target(
-    readd(probability_run),
-    transform = map(probability_run)
-  ),
-  probability_all = target(
-    fast_bind(probability_run_readd),
-    transform = combine(probability_run_readd),
+  probability_summaries = target(
+    fast_bind(readd(probability_run))[, .(
+      scenario = scenario,
+      Mean = mean(value),
+      SD = sd(value),
+      q025 = quantile(value, 0.025),
+      q05 = quantile(value, 0.05),
+      q10 = quantile(value, 0.1),
+      q25 = quantile(value, 0.25),
+      q50 = quantile(value, 0.50),
+      q75 = quantile(value, 0.75),
+      q90 = quantile(value, 0.9),
+      q95 = quantile(value, 0.95),
+      q975 = quantile(value, 0.975)
+    ), .(year, variable)],
+    transform = map(probability_run),
     format = "fst_dt"
-  )
-))
-
-plan <- bind_plans(plan, drake_plan(
-  probability_summary = as.data.table(probability_all)[,.(
-    Mean = mean(value),
-    SD = sd(value),
-    q025 = quantile(value, 0.025),
-    q05 = quantile(value, 0.05),
-    q10 = quantile(value, 0.1),
-    q25 = quantile(value, 0.25),
-    q50 = quantile(value, 0.50),
-    q75 = quantile(value, 0.75),
-    q90 = quantile(value, 0.9),
-    q95 = quantile(value, 0.95),
-    q975 = quantile(value, 0.975)
-  ), .(scenario, year, variable)],
+  ),
+  probability_summary = target(
+    bind_rows(probability_summaries),
+    transform = combine(probability_summaries),
+    format = "fst_dt",
+    hpc = FALSE
+  ),
   probability_long = melt(
     probability_summary,
     id.vars = c("scenario", "year", "variable"),
@@ -214,7 +212,7 @@ plan <- bind_plans(plan, drake_plan(
   select(ClimateModel, Model, Scenario, Region, Variable, Unit,
          dplyr::matches("[[:digit:]]{4}")),
  probability_meta = probability_formatted %>%
-   distinct(ClimateModel, Scenario) %>%
+   distinct(ClimateModel) %>%
    mutate(
      stat = case_when(
        grepl("-Mean$", ClimateModel) ~ "mean",
@@ -311,4 +309,32 @@ plan <- bind_plans(plan, drake_plan(
 ))
 
 ### Make plan
+options(clustermq.scheduler = "multicore")
 make(plan, parallelism = "clustermq", jobs = parallel::detectCores())
+
+## # Some other possibilities for remote execution
+## options(
+##   clustermq.scheduler = "ssh",
+##   clustermq.ssh.host = "shik544@constance.pnl.gov",
+##   clustermq.ssh.log = "~/cmq_ssh.log",
+##   clustermq.template = NULL
+## )
+## make(plan, parallelism = "clustermq",
+##      jobs = 100,
+##      template = list(
+##        workingdir = "hector_project/hector-rcmip",
+##        account = "epa-ccd",
+##        runtime = "00-00:20"
+##      ))
+
+## options(
+##   clustermq.scheduler = "ssh",
+##   clustermq.ssh.host = "altpic",
+##   clustermq.ssh.log = "~/cmq_ssh.log"
+## )
+## make(plan, parallelism = "clustermq", jobs = 8,
+##      template = list(
+##        ## workingdir = "/home/ubuntu/hector-project/rcmip",
+##        logfile = "zz-logs/"
+##      ),
+##      max_expand = 10)
