@@ -3,15 +3,20 @@ library(tidyverse)
 library(here)
 library(glue, exclude = "collapse")
 library(fs)
-library(fst)
 library(data.table, exclude = c("between", "first", "last", "transpose"))
+
+options(clustermq.scheduler = "multicore")
 
 # Make `data.table` bracket notation work.
 .datatable.aware <- TRUE #nolint
 
 stopifnot(
   requireNamespace("reshape2", quietly = TRUE),
-  requireNamespace("git2r", quietly = TRUE)
+  requireNamespace("git2r", quietly = TRUE),
+  requireNamespace("fst", quietly = TRUE),
+  requireNamespace("readxl", quietly = TRUE),
+  # Needed for dynamic branching
+  packageVersion("drake") > "7.7.0"
 )
 
 devtools::load_all(here())
@@ -68,12 +73,15 @@ plan <- drake_plan(
 plan <- bind_plans(plan, drake_plan(
   scenario_df = rcmip_inputs() %>%
     distinct(Model, Scenario, Region),
-  rcmip_vars = rcmip_inputs() %>%
-    distinct(Variable, Unit),
+  rcmip_vars = readxl::read_excel(
+    file_in("data-raw/rcmip-data-submission-template-v3-1-0.xlsx"),
+    sheet = "variable_definitions"
+  ) %>%
+    select(Variable, Unit),
   all_results_rcmip_format = all_results %>%
     rename(Scenario = rcmip_scenario, Variable = variable) %>%
     select(-scenario) %>%
-    filter(year >= 1850) %>%
+
     pivot_wider(names_from = "year", values_from = "value") %>%
     left_join(scenario_df, "Scenario") %>%
     left_join(rcmip_vars, "Variable") %>%
@@ -136,22 +144,39 @@ plan <- bind_plans(plan, drake_plan(
 
 ### Probability runs
 fast_bind <- function(...) {
-  purrr::map(list(...), "results") %>%
-    do.call(c, .) %>%
-    purrr::map(data.table::setDT) %>%
+  purrr::map(c(...), data.table::setDT) %>%
     data.table::rbindlist()
 }
 
 plan <- bind_plans(plan, drake_plan(
-  probability = target(
-    run_probability(.scenario, n = 1000, quiet = TRUE),
-    transform = map(.scenario = !!scenarios)
+  probability_params = read_csv(file_in(
+    "data-raw/brick-posteriors/emissions_17k_posteriorSamples.csv"
+  ), col_types = cols(.default = "d")),
+  isamps = sample.int(nrow(probability_params), 1000),
+  probability_param_draws = probability_params[isamps, ],
+  probability_run = target(
+    run_with_param(
+      scenario,
+      probability_param_draws[["S.temperature"]],
+      probability_param_draws[["diff.temperature"]],
+      probability_param_draws[["alpha.temperature"]]
+    ) %>%
+      mutate(isamp = isamps),
+    dynamic = map(probability_param_draws, isamps),
+    transform = map(scenario = !!scenarios)
+  ),
+  probability_run_readd = target(
+    readd(probability_run),
+    transform = map(probability_run)
   ),
   probability_all = target(
-    fast_bind(probability),
-    transform = combine(probability),
-    format = "fst"
-  ),
+    fast_bind(probability_run_readd),
+    transform = combine(probability_run_readd),
+    format = "fst_dt"
+  )
+))
+
+plan <- bind_plans(plan, drake_plan(
   probability_summary = as.data.table(probability_all)[,.(
     Mean = mean(value),
     SD = sd(value),
@@ -286,5 +311,4 @@ plan <- bind_plans(plan, drake_plan(
 ))
 
 ### Make plan
-future::plan(future.callr::callr)
-make(plan)
+make(plan, parallelism = "clustermq", jobs = parallel::detectCores())
