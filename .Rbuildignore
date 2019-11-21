@@ -1,2 +1,8 @@
 ^LICENSE\.md$
+^.drake/
+^.git/
+^figures/
+^logs/
+^output/
 ^scratch/
+^scripts/

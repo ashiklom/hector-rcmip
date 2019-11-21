@@ -44,10 +44,11 @@ rcmip_outputs <- function(core, ...) {
         # Constants derived from `temperature_component.hpp`
         heatflux * 5100656e8 * (1 - 0.29), "W", "ZJ year-1"
       ),
-      `Emissions|CO2` = ffi_emissions + luc_emissions,
-      `Cumulative Emissions|CO2` = ud_convert2(
-        cumsum(`Emissions|CO2`), "1/12.01 Pg", "1/44.01 Mt"
+      `Emissions|CO2` = ud_convert2(
+        ffi_emissions + luc_emissions,
+        "Pg [C] year-1", "Mt [CO2] year-1"
       ),
+      `Cumulative Emissions|CO2` = cumsum(`Emissions|CO2`),
       `Carbon Sequestration` = ud_convert2(
         atm_land_flux + atm_ocean_flux,
         "Pg [C]", "Mt [CO2]"
@@ -79,7 +80,7 @@ rcmip_outputs <- function(core, ...) {
       # `Heat uptake`
       `Heat Uptake|Ocean`,
       `Surface Air Temperature Change` = Tgav,
-      `Ocean Air Temperature Change` = Tgav_ocean_ST,
+      `Surface Ocean Temperature Change` = Tgav_ocean_ST,
       `Cumulative Emissions|CO2`,
       # Effective radiative forcings...
       # Emissions...
