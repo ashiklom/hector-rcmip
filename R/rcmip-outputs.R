@@ -61,7 +61,7 @@ rcmip_outputs <- function(core, ...) {
         ),
         error = function(e) NULL
       ),
-      `Emissions|NOX` = ud_convert2(
+      `Emissions|NOx` = ud_convert2(
         NOX_emissions,
         "Tg [N] year-1", "Mt [NO2] year-1"
       ),
@@ -89,7 +89,7 @@ rcmip_outputs <- function(core, ...) {
       `Emissions|CO2`,
       `Emissions|N2O` = dplyr::one_of("Emissions|N2O"),
       ## `Emissions|NH3`, -- Not in Hector
-      `Emissions|NOX`,
+      `Emissions|NOx`,
       `Emissions|OC` = OC_emissions,
       `Emissions|Sulfur`,
       `Emissions|VOC` = NMVOC_emissions,
