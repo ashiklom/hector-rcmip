@@ -27,8 +27,10 @@ hector_version <- substr(git2r::revparse_single("../hector", "HEAD")$sha, 0, 8)
 
 scenarios <- c(
   "piControl", "esm-piControl", "1pctCO2", "1pctCO2-4xext",
-  "abrupt-4xCO2", "abrupt-2xCO2", "abrupt-0p5xCO2", "historical",
-  "ssp119", "ssp585"
+  "abrupt-4xCO2", "abrupt-2xCO2", "abrupt-0p5xCO2",
+  "historical", "historical-cmip5",
+  "ssp119", "ssp585",
+  paste0("rcp", c("26", "45", "60", "85"))
 )
 
 models <- c(cmip6_params()[["model"]], "default")
