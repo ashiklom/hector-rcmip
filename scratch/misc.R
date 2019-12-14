@@ -1,3 +1,6 @@
+library(hector.rcmip)
+library(tidyverse)
+
 rcmip_inputs() %>%
   filter(Scenario == "abrupt-2xCO2") %>%
   distinct(Variable, value)
@@ -242,3 +245,16 @@ results %>%
   aes(x = year, y = value) +
   geom_line() +
   facet_wrap(vars(variable), scales = "free_y")
+
+##################################################
+rcin <- rcmip_inputs()
+
+rcin %>%
+  filter(grepl("rcp", Scenario)) %>%
+  distinct(Variable) %>%
+  pull()
+
+rcin %>%
+  ## filter(Variable == "Radiative Forcing|Natural|Volcanic") %>%
+  filter(grepl("volcan", Variable, ignore.case = TRUE)) %>%
+  distinct(Variable, Scenario, Model)
