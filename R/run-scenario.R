@@ -214,9 +214,16 @@ set_scenario <- function(hc, scenario, ...) {
         grepl("^Atmospheric Concentrations", Variable) ~ "concentration",
         grepl("^Emissions", Variable) ~ "emissions",
         TRUE ~ "UNKNOWN"
-      ),
+      ) %>% factor(c("emissions", "concentration", "UNKNOWN")),
       hector_variable = paste(halocarbon, datatype, sep = "_")
     )
+
+  # Prefer emissions, then concentration, then UNKNOWN
+  halocarbon_dict <- halocarbon_dict %>%
+    group_by(halocarbon) %>%
+    arrange(datatype, .by_group = TRUE) %>%
+    slice(1) %>%
+    ungroup()
 
   for (i in seq_len(nrow(halocarbon_dict))) {
     irow <- halocarbon_dict[i,]
