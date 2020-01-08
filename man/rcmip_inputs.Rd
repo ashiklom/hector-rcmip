@@ -4,7 +4,7 @@
 \alias{rcmip_inputs}
 \title{Long RCMIP inputs data.frame}
 \usage{
-rcmip_inputs()
+rcmip_inputs(targetfile = NULL)
 }
 \value{
 

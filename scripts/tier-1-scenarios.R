@@ -43,6 +43,9 @@ scenarios <- c(
 
 models <- c(cmip6_params()[["model"]], "default")
 
+rcmip_infile <- here("inst", "rcmip-inputs.fst")
+if (!file.exists(rcmip_infile)) generate_rcmip_inputs()
+
 do_scenario <- function(scenario, cmip6_model) {
   core <- run_scenario(scenario, cmip6_model)
   rcmip_outputs(core, dates = 1750:2100) %>%
