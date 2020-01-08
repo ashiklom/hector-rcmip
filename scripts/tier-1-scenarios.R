@@ -25,7 +25,8 @@ expose_imports("hector.rcmip")
 outdir <- dir_create(here("output"))
 figdir <- dir_create(here("figures"))
 
-hector_version <- substr(git2r::revparse_single("../hector", "HEAD")$sha, 0, 8)
+# Git commit hash corresponding to Hector RCMIP version
+hector_version <- "62381e7"
 
 scenarios <- c(
   "piControl", "esm-piControl", "1pctCO2", "1pctCO2-4xext",
