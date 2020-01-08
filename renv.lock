@@ -404,15 +404,26 @@
     "hector": {
       "Package": "hector",
       "Version": "2.5.0",
-      "Source": "unknown",
-      "Hash": "ee656131ea66a8a03511edc3e7b53f7d"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "jgcri",
+      "RemoteRepo": "hector",
+      "RemoteRef": "rcmip",
+      "RemoteSha": "62381e717b84101f58d0a172643184997438b11e",
+      "Hash": "330ddb24aef853b97a48287a6fac2dc5"
     },
     "hectortools": {
       "Package": "hectortools",
       "Version": "0.0.0.9000",
-      "Source": "unknown",
-      "Remotes": "jgcri/hector",
-      "Hash": "bdebdb31ae40543b6b1fcf568518df0e"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "ashiklom",
+      "RemoteRepo": "hectortools",
+      "RemoteRef": "master",
+      "RemoteSha": "062cb597c3d2699fe5304cbe956fb36d59ade00b",
+      "Hash": "8962619086537e60455975bba53bd849"
     },
     "here": {
       "Package": "here",
