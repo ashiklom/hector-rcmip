@@ -13,6 +13,8 @@ stopifnot(
   requireNamespace("git2r", quietly = TRUE),
   requireNamespace("fst", quietly = TRUE),
   requireNamespace("readxl", quietly = TRUE),
+  # For parallel execution
+  requireNamespace("clustermq", quietly = TRUE),
   # Needed for dynamic branching
   packageVersion("drake") > "7.7.0"
 )
@@ -82,7 +84,6 @@ plan <- bind_plans(plan, drake_plan(
   all_results_rcmip_format = all_results %>%
     rename(Scenario = rcmip_scenario, Variable = variable) %>%
     select(-scenario) %>%
-
     pivot_wider(names_from = "year", values_from = "value") %>%
     left_join(scenario_df, "Scenario") %>%
     left_join(rcmip_vars, "Variable") %>%
@@ -313,30 +314,3 @@ plan <- bind_plans(plan, drake_plan(
 ### Make plan
 options(clustermq.scheduler = "multicore")
 make(plan, parallelism = "clustermq", jobs = parallel::detectCores())
-
-## # Some other possibilities for remote execution
-## options(
-##   clustermq.scheduler = "ssh",
-##   clustermq.ssh.host = "shik544@constance.pnl.gov",
-##   clustermq.ssh.log = "~/cmq_ssh.log",
-##   clustermq.template = NULL
-## )
-## make(plan, parallelism = "clustermq",
-##      jobs = 100,
-##      template = list(
-##        workingdir = "hector_project/hector-rcmip",
-##        account = "epa-ccd",
-##        runtime = "00-00:20"
-##      ))
-
-## options(
-##   clustermq.scheduler = "ssh",
-##   clustermq.ssh.host = "altpic",
-##   clustermq.ssh.log = "~/cmq_ssh.log"
-## )
-## make(plan, parallelism = "clustermq", jobs = 8,
-##      template = list(
-##        ## workingdir = "/home/ubuntu/hector-project/rcmip",
-##        logfile = "zz-logs/"
-##      ),
-##      max_expand = 10)
