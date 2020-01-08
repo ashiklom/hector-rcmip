@@ -1,3 +1,6 @@
+# Strict-ish dependency checking
+options(conflicts.policy = "depends.ok")
+
 library(drake, exclude = c("gather", "expand"))
 library(tidyverse)
 library(here)
