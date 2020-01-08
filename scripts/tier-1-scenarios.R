@@ -1,5 +1,7 @@
 # Strict-ish dependency checking
 options(conflicts.policy = "depends.ok")
+conflictRules("testthat", exclude = c("matches", "is_null", "equals",
+                                      "not", "is_less_than"))
 
 library(drake, exclude = c("gather", "expand"))
 library(tidyverse)
@@ -91,8 +93,7 @@ plan <- bind_plans(plan, drake_plan(
     pivot_wider(names_from = "year", values_from = "value") %>%
     left_join(scenario_df, "Scenario") %>%
     left_join(rcmip_vars, "Variable") %>%
-    left_join(distinct(meta_model, cmip6_model, ClimateModel),
-              c("Scenario" = "rcmip_scenario", "cmip6_model")) %>%
+    left_join(distinct(meta_model, cmip6_model, ClimateModel), "cmip6_model") %>%
     select(ClimateModel, Model, Scenario, Region, Variable, Unit,
            dplyr::matches("[[:digit:]]{4}")),
   cmip_params_form = cmip6_params() %>%
