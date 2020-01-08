@@ -156,6 +156,13 @@
       "Repository": "CRAN",
       "Hash": "96c01552bfd5661b9bbdefbc762f4bcd"
     },
+    "clustermq": {
+      "Package": "clustermq",
+      "Version": "0.8.8.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "6ef6d273bd05f0ca7f72593ca7890b15"
+    },
     "codetools": {
       "Package": "codetools",
       "Version": "0.2-16",
@@ -600,6 +607,13 @@
       "Repository": "CRAN",
       "Hash": "6dfe8bf774944bd5595785e3229d8771"
     },
+    "narray": {
+      "Package": "narray",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b275f9d21e812b6338f4c3e9d70b2209"
+    },
     "nlme": {
       "Package": "nlme",
       "Version": "3.1-142",
@@ -821,6 +835,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6a20c2cdf133ebc7ac45888c9ccc052b"
+    },
+    "rzmq": {
+      "Package": "rzmq",
+      "Version": "0.9.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c513cb0441ede9854949c01e54d04c80"
     },
     "scales": {
       "Package": "scales",
