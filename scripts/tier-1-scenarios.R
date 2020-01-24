@@ -151,8 +151,7 @@ plan <- bind_plans(plan, drake_plan(
 
 ### Probability runs
 fast_bind <- function(x) {
-  x <- purrr::map(x, data.table::setDT)
-  data.table::rbindlist(x)
+  data.table::rbindlist(purrr::map(x, data.table::fread))
 }
 
 plan <- bind_plans(plan, drake_plan(
@@ -166,14 +165,14 @@ plan <- bind_plans(plan, drake_plan(
       scenario,
       probability_param_draws[["S.temperature"]],
       probability_param_draws[["diff.temperature"]],
-      probability_param_draws[["alpha.temperature"]]
-    ) %>%
-      mutate(isamp = isamps),
+      probability_param_draws[["alpha.temperature"]],
+      isamp = isamps
+    ),
     dynamic = map(probability_param_draws, isamps),
     transform = map(scenario = !!scenarios)
   ),
   probability_summaries = target(
-    fast_bind(readd(probability_run))[, .(
+    rcmip_outputs(result = fast_bind(readd(probability_run)))[, .(
       scenario = scenario,
       Mean = mean(value),
       SD = sd(value),

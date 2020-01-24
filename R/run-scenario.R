@@ -56,13 +56,22 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
     }
   )
 
+  write_output(
+    hc, outfile,
+    rcmip_scenario = scenario,
+    cmip6_model = cmip6_model
+  )
 
-  alldates <- seq(hector::startdate(hc), hector::enddate(hc))
+}
+
+write_output <- function(core, outfile, ...) {
+  mut <- rlang::list2(...)
+  alldates <- seq(hector::startdate(core), hector::enddate(core))
   rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions")
-  rplus <- hector::fetchvars(hc, dates = alldates, rplusvars)
-  result <- hector::fetchvars_all(hc, dates = alldates) %>%
+  rplus <- hector::fetchvars(core, dates = alldates, rplusvars)
+  result <- hector::fetchvars_all(core, dates = alldates) %>%
     dplyr::bind_rows(rplus) %>%
-    dplyr::mutate(rcmip_scenario = scenario, cmip6_model = cmip6_model)
+    dplyr::mutate(!!!mut)
 
   # Write result to file
   data.table::fwrite(result, outfile)

@@ -4,10 +4,13 @@
 \alias{rcmip_outputs}
 \title{Retrieve results with RCMIP variable names and units}
 \usage{
-rcmip_outputs(outfile, ...)
+rcmip_outputs(outfile, result = NULL, ...)
 }
 \arguments{
 \item{outfile}{Hector output file}
+
+\item{result}{\code{data.frame} of results. If not \code{NULL}, use this instead of
+reading from \code{outfile}.}
 
 \item{...}{Additional arguments to \code{\link[=fetchvars2]{fetchvars2()}}}
 }

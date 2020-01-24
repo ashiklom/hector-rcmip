@@ -1,30 +1,3 @@
-#' Run scenario with parameter uncertainty
-#'
-#' @inheritParams run_scenario
-#' @param n Number of ensembles to run
-#' @return Nested `data.frame` of outputs
-#' @author Alexey Shiklomanov
-#' @export
-run_probability <- function(scenario, n = 1000, ...) {
-
-  params <- readr::read_csv(here::here(
-    "data-raw", "brick-posteriors", "emissions_17k_posteriorSamples.csv"
-  ), col_types = readr::cols(.default = "d"))
-
-  params_sub <- dplyr::sample_n(params, size = n, replace = FALSE)
-
-  pb <- progress::progress_bar$new(total = n)
-  results <- params_sub %>%
-    dplyr::mutate(
-      results = furrr::future_pmap(list(
-        pS = S.temperature,
-        pdiff = diff.temperature,
-        palpha = alpha.temperature
-      ), run_with_param,
-      scenario = scenario, .pb = pb, ...)
-    )
-}
-
 #' Run Hector with specific parameter values
 #'
 #' @param scenario Hector scenario
@@ -75,14 +48,18 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
     hector::getunits(hector::VOLCANIC_SCALE())
   )
   hector::run(core, maxdate)
-  out <- rcmip_outputs(core, dates = dates, ...)
+  outfile <- file.path(
+    "output", "zz-raw-output",
+    "probability",
+    scenario,
+    paste0(uuid::UUIDgenerate(), ".csv")
+  )
   if (include_params) {
-    out <- dplyr::mutate(
-      out,
-      param_ecs = pS,
-      param_diffusivity = pdiff,
-      param_volscl = palpha
-    )
+    write_output(core, outfile, param_ecs = pS,
+                 param_diffusivity = pdiff,
+                 param_volscl = palpha,
+                 ...)
+  } else {
+    write_output(core, outfile, ...)
   }
-  out
 }

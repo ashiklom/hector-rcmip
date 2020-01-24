@@ -1,11 +1,13 @@
 #' Retrieve results with RCMIP variable names and units
 #'
 #' @param outfile Hector output file
+#' @param result `data.frame` of results. If not `NULL`, use this instead of
+#'   reading from `outfile`.
 #' @param ... Additional arguments to [fetchvars2()]
 #' @return
 #' @author Alexey Shiklomanov
 #' @export
-rcmip_outputs <- function(outfile, ...) {
+rcmip_outputs <- function(outfile, result = NULL, ...) {
   vvars <- c(
     "CH4",
     "Ca",
@@ -31,15 +33,18 @@ rcmip_outputs <- function(outfile, ...) {
     hector::RF_OC(),
     hector::RF_SO2()
   )
-
-  colspec <- vroom::cols(
-    scenario = "c", year = "d",
-    variable = "c", value = "d", units = "c",
-    rcmip_scenario = "c", cmip6_model = "c"
-  )
-
-  results <- vroom::vroom(outfile, col_types = colspec) %>%
-    dplyr::filter(variable %in% vvars)
+  if (is.null(result)) {
+    colspec <- vroom::cols(
+      scenario = "c", year = "d",
+      variable = "c", value = "d", units = "c",
+      rcmip_scenario = "c", cmip6_model = "c"
+    )
+    results <- vroom::vroom(outfile, col_types = colspec) %>%
+      dplyr::filter(variable %in% vvars)
+  } else {
+    results <- result %>%
+      dplyr::filter(variable %in% vvars)
+  }
 
   results_wide <- results %>%
     dplyr::select(-units) %>%
