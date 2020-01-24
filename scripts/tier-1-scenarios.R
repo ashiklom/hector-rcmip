@@ -46,18 +46,15 @@ models <- c(cmip6_params()[["model"]], "default")
 rcmip_infile <- here("inst", "rcmip-inputs.fst")
 if (!file.exists(rcmip_infile)) generate_rcmip_inputs()
 
-do_scenario <- function(scenario, cmip6_model) {
-  core <- run_scenario(scenario, cmip6_model)
-  rcmip_outputs(core, dates = 1750:2100) %>%
-    dplyr::mutate(rcmip_scenario = scenario,
-                  cmip6_model = cmip6_model)
-}
-
 ### Scenario outputs -- single runs
 plan <- drake_plan(
-  out = target(
-    do_scenario(scenario, model),
+  out_files = target(
+    run_scenario(scenario, model),
     transform = cross(scenario = !!scenarios, model = !!models)
+  ),
+  out = target(
+    rcmip_outputs(out_files),
+    transform = map(out_files)
   ),
   all_results = target(
     bind_rows(out) %>%

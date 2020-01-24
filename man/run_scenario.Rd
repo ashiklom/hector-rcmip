@@ -4,13 +4,15 @@
 \alias{run_scenario}
 \title{Run an RCMIP Scenario using Hector}
 \usage{
-run_scenario(scenario, cmip6_model = NULL, ...)
+run_scenario(scenario, cmip6_model = NULL, outfile = NULL, ...)
 }
 \arguments{
 \item{scenario}{Name of scenario}
 
 \item{cmip6_model}{CMIP6 model parameter set to use. If \code{NULL} (default), use
 Hector defaults.}
+
+\item{outfile}{Output file. Default is \verb{output/zz-raw-output/<scenario>-<model>.csv}}
 
 \item{...}{Additional arguments to \code{\link[=set_variable]{set_variable()}}}
 }

@@ -24,6 +24,9 @@ Imports:
     udunits2,
     progress,
     purrr,
-    furrr
+    furrr,
+    uuid,
+    data.table,
+    vroom
 Suggests: 
     testthat

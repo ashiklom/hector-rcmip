@@ -3,42 +3,42 @@ simpleNbox, ffi_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|Fossil a
 simpleNbox, ffi_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|MAGICC Fossil and Industrial, Mt CO2 year-1, Mt 1/44.01 year-1
 simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|AFOLU, Mt CO2 year-1, Mt 1/44.01 year-1
 simpleNbox, luc_emissions, PgC year-1, 1/12.01 Pg year-1, Emissions|CO2|MAGICC AFOLU, Mt CO2 year-1, Mt 1/44.01 year-1
-simpleNbox, Ca_constrain, ppm, ppm, Atmospheric Concentrations|CO2, ppm, ppm
+simpleNbox, CO2_constrain, ppm, ppm, Atmospheric Concentrations|CO2, ppm, ppm
 simpleNbox, Ftalbedo, W m-2, W m-2, Radiative Forcing|Anthropogenic|Albedo Change, W m-2, W m-2
 simpleNbox, Ftalbedo, W m-2, W m-2, Effective Radiative Forcing|Anthropogenic|Albedo Change, W m-2, W m-2
 so2, SO2_emissions, Gg S year-1, Gg 1/32.1 year-1, Emissions|Sulfur, Mt SO2 year-1, Mt 1/64.1 year-1
 so2, SV, W m-2, W m-2, Radiative Forcing|Natural|Volcanic, W m-2, W m-2
 so2, SV, W m-2, W m-2, Effective Radiative Forcing|Natural|Volcanic, W m-2, W m-2
 CH4, CH4_emissions, Tg CH4 year-1, Tg year-1, Emissions|CH4, Mt CH4 year-1, Mt year-1
-CH4, CH4, ppb, ppb, Atmospheric Concentrations|CH4, ppb, ppb
+CH4, CH4_constrain, ppb, ppb, Atmospheric Concentrations|CH4, ppb, ppb
 OH|ozone, NOX_emissions, Tg N year-1, 1/14.007 Tg year-1, Emissions|NOx, Mt NOx year-1, Mt 1/46.007 year-1
 OH|ozone, CO_emissions, Tg CO year-1, Tg year-1, Emissions|CO, Mt CO year-1, Mt year-1
 OH|ozone, NMVOC_emissions, Tg NMVOC year-1, Tg year-1, Emissions|VOC, Mt VOC year-1, Mt year-1
 N2O, N2O_emissions, Tg N year-1, 44.014/14.007 Tg year-1, Emissions|N2O, kt N2O year-1, 1000 t year-1
-N2O, N2O, ppb, ppb, Atmospheric Concentrations|N2O, ppb, ppb
+N2O, N2O_constrain, ppb, ppb, Atmospheric Concentrations|N2O, ppb, ppb
 BC, BC_emissions, Tg year-1, Tg year-1, Emissions|BC, Mt BC year-1, Mt year-1
 OC, OC_emissions, Tg year-1, Tg year-1, Emissions|OC, Mt OC year-1, Mt year-1
-HFC125_halocarbon, HFC125_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC125, ppt, ppt
-HFC134a_halocarbon, HFC134a_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC134a, ppt, ppt
-HFC143a_halocarbon, HFC143a_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC143a, ppt, ppt
-HFC227ea_halocarbon, HFC227ea_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC227ea, ppt, ppt
-HFC23_halocarbon, HFC23_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC23, ppt, ppt
-HFC245_halocarbon, HFC245_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC245fa, ppt, ppt
-HFC32_halocarbon, HFC32_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC32, ppt, ppt
-HFC365_halocarbon, HFC365_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC365mfc, ppt, ppt
-HFC4310_halocarbon, HFC4310_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC4310mee, ppt, ppt
-C2F6_halocarbon, C2F6_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|PFC|C2F6, ppt, ppt
-CF4_halocarbon, CF4_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|PFC|CF4, ppt, ppt
-SF6_halocarbon, SF6_concentration, ppt, ppt, Atmospheric Concentrations|F-Gases|SF6, ppt, ppt
-CCl4_halocarbon, CCl4_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CCl4, ppt, ppt
-CFC11_halocarbon, CFC11_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC11, ppt, ppt
-CFC113_halocarbon, CFC113_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC113, ppt, ppt
-CFC114_halocarbon, CFC114_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC114, ppt, ppt
-CFC115_halocarbon, CFC115_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC115, ppt, ppt
-CFC12_halocarbon, CFC12_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC12, ppt, ppt
-CH3Br_halocarbon, CH3Br_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3Br, ppt, ppt
-CH3CCl3_halocarbon, CH3CCl3_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3CCl3, ppt, ppt
-CH3Cl_halocarbon, CH3Cl_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3Cl, ppt, ppt
+HFC125_halocarbon, HFC125_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC125, ppt, ppt
+HFC134a_halocarbon, HFC134a_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC134a, ppt, ppt
+HFC143a_halocarbon, HFC143a_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC143a, ppt, ppt
+HFC227ea_halocarbon, HFC227ea_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC227ea, ppt, ppt
+HFC23_halocarbon, HFC23_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC23, ppt, ppt
+HFC245_halocarbon, HFC245_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC245fa, ppt, ppt
+HFC32_halocarbon, HFC32_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC32, ppt, ppt
+HFC365_halocarbon, HFC365_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC365mfc, ppt, ppt
+HFC4310_halocarbon, HFC4310_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|HFC|HFC4310mee, ppt, ppt
+C2F6_halocarbon, C2F6_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|PFC|C2F6, ppt, ppt
+CF4_halocarbon, CF4_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|PFC|CF4, ppt, ppt
+SF6_halocarbon, SF6_constrain, ppt, ppt, Atmospheric Concentrations|F-Gases|SF6, ppt, ppt
+CCl4_halocarbon, CCl4_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CCl4, ppt, ppt
+CFC11_halocarbon, CFC11_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC11, ppt, ppt
+CFC113_halocarbon, CFC113_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC113, ppt, ppt
+CFC114_halocarbon, CFC114_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC114, ppt, ppt
+CFC115_halocarbon, CFC115_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC115, ppt, ppt
+CFC12_halocarbon, CFC12_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CFC|CFC12, ppt, ppt
+CH3Br_halocarbon, CH3Br_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3Br, ppt, ppt
+CH3CCl3_halocarbon, CH3CCl3_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3CCl3, ppt, ppt
+CH3Cl_halocarbon, CH3Cl_constrain, ppt, ppt, Atmospheric Concentrations|Montreal Gases|CH3Cl, ppt, ppt
 halon1211_halocarbon, halon1211_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|Halon1211, ppt, ppt
 halon1301_halocarbon, halon1301_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|Halon1301, ppt, ppt
 halon2402_halocarbon, halon2402_concentration, ppt, ppt, Atmospheric Concentrations|Montreal Gases|Halon2402, ppt, ppt

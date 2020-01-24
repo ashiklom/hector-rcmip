@@ -414,11 +414,11 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "jgcri",
+      "RemoteUsername": "ashiklom",
       "RemoteRepo": "hector",
-      "RemoteRef": "rcmip",
-      "RemoteSha": "62381e717b84101f58d0a172643184997438b11e",
-      "Hash": "330ddb24aef853b97a48287a6fac2dc5"
+      "RemoteRef": "rmcip-new",
+      "RemoteSha": "18defb195f27be11507d741c52de348acaaa9a9b",
+      "Hash": "592c21ea8a57fed860fcf29135911b42"
     },
     "hectortools": {
       "Package": "hectortools",

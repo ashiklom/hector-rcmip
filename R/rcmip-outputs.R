@@ -1,12 +1,12 @@
 #' Retrieve results with RCMIP variable names and units
 #'
-#' @param core Hector core (as returned by [run_scenario()])
+#' @param outfile Hector output file
 #' @param ... Additional arguments to [fetchvars2()]
 #' @return
 #' @author Alexey Shiklomanov
 #' @export
-rcmip_outputs <- function(core, ...) {
-  results <- fetchvars2(core, c(
+rcmip_outputs <- function(outfile, ...) {
+  vvars <- c(
     "CH4",
     "Ca",
     "ffi_emissions", "luc_emissions",
@@ -30,7 +30,16 @@ rcmip_outputs <- function(core, ...) {
     hector::RF_BC(),
     hector::RF_OC(),
     hector::RF_SO2()
-  ), ...)
+  )
+
+  colspec <- vroom::cols(
+    scenario = "c", year = "d",
+    variable = "c", value = "d", units = "c",
+    rcmip_scenario = "c", cmip6_model = "c"
+  )
+
+  results <- vroom::vroom(outfile, col_types = colspec) %>%
+    dplyr::filter(variable %in% vvars)
 
   results_wide <- results %>%
     dplyr::select(-units) %>%
