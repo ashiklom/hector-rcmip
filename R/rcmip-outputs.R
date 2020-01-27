@@ -47,7 +47,7 @@ rcmip_outputs <- function(outfile, result = NULL, ...) {
   }
 
   results_wide <- results %>%
-    dplyr::select(-units) %>%
+    dplyr::select(-dplyr::one_of("units")) %>%
     tidyr::pivot_wider(names_from = "variable", values_from = "value")
 
   results_wide2 <- results_wide %>%
@@ -86,7 +86,7 @@ rcmip_outputs <- function(outfile, result = NULL, ...) {
       )
     ) %>%
     dplyr::select(
-      dplyr::one_of(c("scenario", "cmip6_model", "year")),
+      dplyr::one_of(c("scenario", "cmip6_model", "year", "stat")),
       `Atmospheric Concentrations|CH4` = CH4,
       `Atmospheric Concentrations|CO2` = Ca,
       `Carbon Sequestration`,

@@ -67,7 +67,8 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
 write_output <- function(core, outfile, ...) {
   mut <- rlang::list2(...)
   alldates <- seq(hector::startdate(core), hector::enddate(core))
-  rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions")
+  rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions",
+                 "atm_land_flux", "Tgav_ocean_ST")
   rplus <- hector::fetchvars(core, dates = alldates, rplusvars)
   result <- hector::fetchvars_all(core, dates = alldates) %>%
     dplyr::bind_rows(rplus) %>%
