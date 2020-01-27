@@ -37,7 +37,7 @@ rcmip_outputs <- function(outfile, result = NULL, ...) {
     colspec <- vroom::cols(
       scenario = "c", year = "d",
       variable = "c", value = "d", units = "c",
-      rcmip_scenario = "c", cmip6_model = "c"
+      scenario = "c", cmip6_model = "c"
     )
     results <- vroom::vroom(outfile, col_types = colspec) %>%
       dplyr::filter(variable %in% vvars)
@@ -86,8 +86,7 @@ rcmip_outputs <- function(outfile, result = NULL, ...) {
       )
     ) %>%
     dplyr::select(
-      scenario = scenario,
-      year = year,
+      dplyr::one_of(c("scenario", "cmip6_model", "year")),
       `Atmospheric Concentrations|CH4` = CH4,
       `Atmospheric Concentrations|CO2` = Ca,
       `Carbon Sequestration`,
@@ -115,9 +114,14 @@ rcmip_outputs <- function(outfile, result = NULL, ...) {
       `Radiative Forcing|Anthropogenic|CO2` = FCO2
     )
 
+  first_pivot <- which(colnames(results_wide2) == "Atmospheric Concentrations|CH4")
+  pivot_cols <- colnames(results_wide2)[first_pivot:ncol(results_wide2)]
+
   results_long <- results_wide2 %>%
-    tidyr::pivot_longer(-c(scenario, year),
-                        names_to = "variable",
-                        values_to = "value")
+    tidyr::pivot_longer(
+      pivot_cols,
+      names_to = "variable",
+      values_to = "value"
+    )
   results_long
 }

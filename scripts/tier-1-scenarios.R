@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 # Strict-ish dependency checking
 options(conflicts.policy = "depends.ok")
 conflictRules("testthat", exclude = c("matches", "is_null", "equals",
@@ -171,8 +172,13 @@ plan <- bind_plans(plan, drake_plan(
     dynamic = map(probability_param_draws, isamps),
     transform = map(scenario = !!scenarios)
   ),
+  probability_rcout = target(
+    rcmip_outputs(probability_run),
+    dynamic = map(probability_run),
+    transform = map(probability_run)
+  ),
   probability_summaries = target(
-    rcmip_outputs(result = fast_bind(readd(probability_run)))[, .(
+    result = fast_bind(readd(probability_rcout))[, .(
       scenario = scenario,
       Mean = mean(value),
       SD = sd(value),
@@ -186,7 +192,7 @@ plan <- bind_plans(plan, drake_plan(
       q95 = quantile(value, 0.95),
       q975 = quantile(value, 0.975)
     ), .(year, variable)],
-    transform = map(probability_run),
+    transform = combine(probability_rcout),
     format = "fst_dt"
   ),
   probability_summary = target(

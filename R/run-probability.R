@@ -54,6 +54,7 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
     scenario,
     paste0(uuid::UUIDgenerate(), ".csv")
   )
+  dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
   if (include_params) {
     write_output(core, outfile, param_ecs = pS,
                  param_diffusivity = pdiff,
