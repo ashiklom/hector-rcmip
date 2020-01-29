@@ -49,7 +49,11 @@ rcmip_infile <- here("inst", "rcmip-inputs.fst")
 if (!file.exists(rcmip_infile)) generate_rcmip_inputs()
 
 # Individual output files
-out_files <- dir_ls(raw_output_dir, type = "file", glob = "*.csv")
+out_files <- dir_ls(
+  path(raw_output_dir, "single-run"),
+  type = "file",
+  glob = "*.csv"
+)
 
 ### Scenario outputs -- single runs
 plan <- drake_plan(
@@ -152,27 +156,14 @@ plan <- bind_plans(plan, drake_plan(
 # Probability files
 
 ### Probability runs
-get_probability_files <- function(outdir) {
-  tibble::tibble(
-    directory = fs::dir_ls(outdir),
-    files = purrr::map(directory, dir_ls, glob = "*.csv") %>%
-      purrr::map(as.character)
-  ) %>%
-    tidyr::unnest(files) %>%
-    dplyr::transmute(
-      scenario = fs::path_file(directory),
-      file = files
-    )
-}
-
-summarize_probability_scenario <- function(scenario_files) {
+summarize_probability_scenario <- function(scenario) {
   .datatable.aware <- TRUE #nolint
-  dat <- data.table::rbindlist(lapply(
-    scenario_files[["file"]],
-    data.table::fread,
-    select = c("year", "variable", "value")
-  ))
-  data.table::setDT(dat)
+  scenario_file <- fs::path(
+    "output", "zz-raw-output", "probability-processed",
+    paste0(scenario, "-p.fst")
+  )
+  stopifnot(file.exists(scenario_file))
+  dat <- fst::read_fst(scenario_file, as.data.table = TRUE)
   result <- dat[!is.na(year) & !is.na(value), .(
     Mean = mean(value),
     SD = sd(value),
@@ -187,23 +178,13 @@ summarize_probability_scenario <- function(scenario_files) {
     q975 = quantile(value, 0.975)
   ), .(year, variable)]
   tibble::as_tibble(result) %>%
-    dplyr::mutate(scenario = unique(scenario_files[["scenario"]])) %>%
+    dplyr::mutate(scenario = !!scenario) %>%
     dplyr::select(scenario, dplyr::everything())
 }
 
-fast_bind <- function(x) {
-  data.table::rbindlist(purrr::map(x, data.table::fread))
-}
-
 plan <- bind_plans(plan, drake_plan(
-  probability_files_df = get_probability_files(path(
-    raw_output_dir, "probability"
-  )),
   probability_summaries_raw = target(
-    summarize_probability_scenario(dplyr::filter(
-      probability_files_df,
-      scenario == s
-    )),
+    summarize_probability_scenario(s),
     transform = map(s = !!scenarios)
   ),
   probability_summaries = target(

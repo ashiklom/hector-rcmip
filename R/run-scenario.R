@@ -3,7 +3,7 @@
 #' @param scenario Name of scenario
 #' @param cmip6_model CMIP6 model parameter set to use. If `NULL` (default), use
 #'   Hector defaults.
-#' @param outfile Output file. Default is `output/zz-raw-output/<scenario>-<model>.csv`
+#' @param outfile Output file. Default is `output/zz-raw-output/single-run/<scenario>-<model>.csv`
 #' @param ... Additional arguments to [set_variable()]
 #' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
@@ -13,7 +13,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
   if (is.null(outfile)) {
     modeltag <- if (is.null(cmip6_model)) "default" else cmip6_model
     outfile <- file.path(
-      "output", "zz-raw-output",
+      "output", "zz-raw-output", "single-run",
       paste0(scenario, "-", modeltag, ".csv")
     )
     dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
@@ -66,7 +66,7 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
 
 write_output <- function(core, outfile, ...) {
   mut <- rlang::list2(...)
-  alldates <- seq(hector::startdate(core), hector::enddate(core))
+  alldates <- seq(hector::startdate(core) + 1, hector::enddate(core))
   rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions",
                  "atm_land_flux", "Tgav_ocean_ST")
   rplus <- hector::fetchvars(core, dates = alldates, rplusvars)
