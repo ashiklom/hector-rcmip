@@ -66,11 +66,16 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
 
 write_output <- function(core, outfile, ...) {
   mut <- rlang::list2(...)
+  # year+1 here because can't access year 1 for `LAND_CFLUX` (and maybe others)
   alldates <- seq(hector::startdate(core) + 1, hector::enddate(core))
-  rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions",
-                 "atm_land_flux", "Tgav_ocean_ST")
-  rplus <- hector::fetchvars(core, dates = alldates, rplusvars)
-  result <- hector::fetchvars_all(core, dates = alldates) %>%
+  allvars <- hector::fetchvars_all(core, dates = alldates)
+  # These variables might not be in fetchvars_all
+  rplusvars <- c("NOX_emissions", "CO_emissions", "NMVOC_emissions", "Tgav_ocean_ST")
+  rplus <- hector::fetchvars(core, dates = alldates, rplusvars) %>%
+    # Remove any variables that might have been added to fetchvars_all. This
+    # ensures there are no duplicates.
+    dplyr::anti_join(allvars, "variable")
+  result <- allvars %>%
     dplyr::bind_rows(rplus) %>%
     dplyr::mutate(!!!mut)
 
