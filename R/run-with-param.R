@@ -4,9 +4,12 @@
 #' @param pS Equilibrium climate sensitivity (`S`)
 #' @param pdiff Heat diffusivity (`diff`)
 #' @param palpha Aerosol scaling factor (`alpha`)
+#' @param dates
 #' @param include_params Logical. If `TRUE` (default), include parameter values
 #'   in output object
 #' @param .pb Optional [progress::progress_bar()] bar object. If `NULL`, ignore.
+#' @param isamp Optional sample index
+#' @param ... Additional columns to add to output
 #' @inheritParams rcmip_outputs
 #' @return `data.frame` of results
 #' @author Alexey Shiklomanov
@@ -14,7 +17,8 @@
 run_with_param <- function(scenario, pS, pdiff, palpha,
                            dates = 1750:2100,
                            include_params = TRUE,
-                           .pb = NULL, ...) {
+                           .pb = NULL,
+                           isamp = NULL, ...) {
 
   if (!is.null(.pb)) .pb$tick()
 
@@ -48,19 +52,21 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
     hector::getunits(hector::VOLCANIC_SCALE())
   )
   hector::run(core, maxdate)
+  if (is.null(isamp)) isamp <- uuid::UUIDgenerate()
   outfile <- file.path(
     "output", "zz-raw-output",
     "probability",
     scenario,
-    paste0(uuid::UUIDgenerate(), ".csv")
+    paste0(isamp, ".csv")
   )
   dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
   if (include_params) {
     write_output(core, outfile, param_ecs = pS,
                  param_diffusivity = pdiff,
                  param_volscl = palpha,
+                 isamp = isamp,
                  ...)
   } else {
-    write_output(core, outfile, ...)
+    write_output(core, outfile, isamp = isamp, ...)
   }
 }
