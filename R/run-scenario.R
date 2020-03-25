@@ -3,12 +3,13 @@
 #' @param scenario Name of scenario
 #' @param cmip6_model CMIP6 model parameter set to use. If `NULL` (default), use
 #'   Hector defaults.
+#'  @param return_core default is set to FALSE, so that the csv file can be written out. 
 #' @param outfile Output file. Default is `output/zz-raw-output/single-run/<scenario>-<model>.csv`
 #' @param ... Additional arguments to [set_variable()]
 #' @return Hector core object at the run end date
 #' @author Alexey Shiklomanov
 #' @export
-run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
+run_scenario <- function(scenario, cmip6_model = NULL, return_core = FALSE, outfile = NULL, ...) {
 
   if (is.null(outfile)) {
     modeltag <- if (is.null(cmip6_model)) "default" else cmip6_model
@@ -56,11 +57,16 @@ run_scenario <- function(scenario, cmip6_model = NULL, outfile = NULL, ...) {
     }
   )
 
-  write_output(
-    hc, outfile,
-    rcmip_scenario = scenario,
-    cmip6_model = cmip6_model
-  )
+  if(return_core){
+    hc
+  } else {
+    write_output(
+      hc, outfile,
+      rcmip_scenario = scenario,
+      cmip6_model = cmip6_model
+    )
+  }
+
 
 }
 
