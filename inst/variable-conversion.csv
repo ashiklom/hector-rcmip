@@ -14,7 +14,7 @@ CH4, CH4_constrain, ppb, ppb, Atmospheric Concentrations|CH4, ppb, ppb
 OH|ozone, NOX_emissions, Tg N year-1, 1/14.007 Tg year-1, Emissions|NOx, Mt NOx year-1, Mt 1/46.007 year-1
 OH|ozone, CO_emissions, Tg CO year-1, Tg year-1, Emissions|CO, Mt CO year-1, Mt year-1
 OH|ozone, NMVOC_emissions, Tg NMVOC year-1, Tg year-1, Emissions|VOC, Mt VOC year-1, Mt year-1
-N2O, N2O_emissions, Tg N year-1, 44.014/14.007 Tg year-1, Emissions|N2O, kt N2O year-1, 1000 t year-1
+N2O, N2O_emissions, Tg N year-1, 44.014/28.014 Tg year-1, Emissions|N2O, kt N2O year-1, 1000 t year-1
 N2O, N2O_constrain, ppb, ppb, Atmospheric Concentrations|N2O, ppb, ppb
 BC, BC_emissions, Tg year-1, Tg year-1, Emissions|BC, Mt BC year-1, Mt year-1
 OC, OC_emissions, Tg year-1, Tg year-1, Emissions|OC, Mt OC year-1, Mt year-1
