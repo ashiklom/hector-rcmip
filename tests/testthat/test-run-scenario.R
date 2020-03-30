@@ -36,12 +36,12 @@ test_that("Cores set up properly",{
 
   # Format the comparion data. 
   comp_data      <- dplyr::left_join(rcmip, true)
-  temp_comp_data <- na.omit(comp_data[comp_data$variable == hector::GLOBAL_TEMP(), ])
+  temp_comp_data <- na.omit(comp_data[comp_data$year > 2015 & comp_data$variable == hector::GLOBAL_TEMP(), ])
   temp_RMSE <- mean((temp_comp_data$rcmip - temp_comp_data$hector)^2)
   
   # Make sure that the results are within each other for some threshold. 
-  # Make sure that the temp results are within 0.01 deg C of one anohter. 
-  temp_threshold <- 0.01
+  # Make sure that the temp results are within 0.001 deg C of one anohter. 
+  temp_threshold <- 0.001
   testthat::expect_true(temp_RMSE < temp_threshold)
   
 })
