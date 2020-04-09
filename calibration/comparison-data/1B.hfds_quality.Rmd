@@ -1,0 +1,230 @@
+---
+title: "CMIP6 HFDS Quality Check"
+output: 
+  html_notebook:
+    toc: true
+    toc_depth: 5
+    toc_float: true
+---
+
+## Objective 
+
+The ocean heat flux data is essential for Hector calibration. This markdown serves two purposes. 
+
+1. Prepare the ESM data to be used in the calibration. 
+2. Quality check the data. 
+
+## Set Up 
+
+```{r, echo = FALSE, message = FALSE}
+# Import required libs
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+```
+
+
+```{r}
+# Define required directories
+DATARAW_DIR <- here::here('calibration')
+INPUT_DIR   <- file.path(DATARAW_DIR, 'comparison-data', '1A-out')
+OUT_DIR     <- file.path(DATARAW_DIR, 'comparison-data', '1B-out')
+dir.create(OUT_DIR, showWarnings = FALSE)
+```
+
+Load the ocean heat flux data that has been processed on pic. 
+```{r}
+# Import the raw ocean heat flux data.
+raw_hfds_data <- read.csv(file.path(INPUT_DIR, '1A.hfds-output.csv'), stringsAsFactors = FALSE)
+```
+
+
+## Checking for Unprocessed Files 
+
+How many files were unable to be processed by the cdo code? 
+```{r}
+problem_files  <- raw_hfds_data[which(raw_hfds_data$problem), ]
+processed_data <- setdiff(raw_hfds_data, problem_files)
+message(nrow(problem_files), ' files were not processed.')
+```
+
+
+What files were not processed? 
+```{r}
+problem_files %>% 
+  select(model, experiment) %>% 
+  distinct() %>% 
+  kable(format = 'markdown')
+```
+
+Check to see if it is just ensemble memebers that we are missing or if we are missing novel model / experiment data. 
+
+```{r}
+req_cols  <- c('variable', 'model', 'experiment', 'grid')
+missing   <- distinct(problem_files[ , names(problem_files) %in% req_cols])
+have_data <- distinct(processed_data[ , names(processed_data) %in% req_cols])
+
+no_data <- setdiff(have_data, missing) 
+
+message('We have absolutely no data for ', nrow(no_data), ' models / experiments.')
+```
+
+How many files were we able to process? 
+
+```{r}
+n_good <- nrow(processed_data[ , names(processed_data) %in% c('model', 'experiment')])
+message('We have data from ', n_good, ' models & experiments.')
+```
+
+
+
+
+## Quality Checks 
+
+### 1. Do we have data for duplicate grids? 
+```{r}
+processed_data %>%
+  group_by(variable, domain, model, experiment, ensemble) %>% 
+  summarise(n_grid = n_distinct(grid)) %>% 
+  ungroup %>% 
+  filter(n_grid != 1) %>%  
+  mutate(duplicate = TRUE) -> 
+  duplicate_grids
+
+message('Number of models with results from mulitple grids: ', length(unique(duplicate_grids$model)))
+```
+
+If there are instances where we have results from mulitple grids opt to continue to perserve the gn grid because 
+it is the model output in its native resolution. 
+
+```{r}
+processed_data %>%
+  mutate(keep = TRUE) %>% 
+  left_join(duplicate_grids, by = c("variable", "domain", "model", "experiment", "ensemble")) %>% 
+  mutate(keep = if_else(duplicate == TRUE & grid != 'gn', FALSE, keep)) %>%  
+  filter(keep) %>%  
+  select(-keep, -duplicate, -n_grid, -problem) -> 
+  data1
+```
+
+Check to make sure there are no duplicates. 
+
+```{r}
+data1 %>%
+  group_by(variable, domain, model, experiment, ensemble) %>% 
+  summarise(n_grid = n_distinct(grid)) %>% 
+  ungroup %>% 
+  filter(n_grid != 1) %>%  
+  mutate(duplicate = TRUE) -> 
+  duplicate_grids
+
+invisible(assertthat::assert_that(nrow(duplicate_grids) == 0, msg = 'duplicate grids in data frame.'))
+```
+
+### 2. Do we have duplicate years of data? 
+
+Mulitple years of data can be an issue whenever the output netcdf files are saved as mulitple netcdfs. 
+```{r}
+data1 %>%  
+  group_by(units, variable, domain, model, experiment, ensemble, grid, year) %>%  
+  summarise(n_yr = n_distinct(year)) %>%  
+  ungroup() %>% 
+  filter(n_yr != 1) -> 
+  duplicate_years
+
+assertthat::assert_that(nrow(duplicate_years) == 0, msg = 'Multiple observations for a single year of data.')
+
+# If it ends up where there are mulitple observations for a single model output year more code will need to be
+# added but for now this is not an issue. 
+data1 %>% 
+  select(year, value, units, variable, domain, model, experiment, ensemble) -> 
+  data2
+```
+
+
+
+
+
+
+## Process Data 
+### 3. Idealized Runs 
+
+Make sure the idealized runs all start at t = 0.
+```{r}
+idealized_exps <- c("1pctCO2", "abrupt-4xCO2", "piControl", "abrupt-0p5xCO2")
+
+data2 %>%  
+  filter(experiment %in% idealized_exps) -> 
+  idealized_exp_results
+
+idealized_exp_results %>% 
+  group_by(experiment, model, ensemble) %>% 
+  summarise(start_year = min(year)) -> 
+  start_years
+
+idealized_exp_results %>% 
+  left_join(start_years,  by = c("model", "experiment", "ensemble")) %>%
+  mutate(year = year - start_year) ->
+  idealized_correct_years
+
+
+data2 %>%  
+  filter(!experiment %in% idealized_exps) %>%  
+  bind_rows(idealized_correct_years) -> 
+  data3
+```
+
+### 4. Hector variables 
+
+```{r}
+data3 %>%  
+  mutate(variable = hector::HEAT_FLUX()) -> 
+  data4
+```
+
+## Final Data 
+```{r}
+heatflux_data <- data4
+```
+
+
+
+## Sanity Plots 
+
+### Plot Ocean Heat Flux 
+
+#### Generate all of the tas sanity plots. 
+
+```{r}
+heatflux_data %>% 
+  mutate(class = 'Phase CMIP6', 
+         class = if_else(experiment %in% idealized_exps, 'DECK Idealized', class)) %>%  
+  split(interaction(.$model, .$variable, drop = TRUE)) %>%  
+  lapply(function(input){
+    
+    model <- unique(input$model)
+    
+    input %>% 
+      filter(year <= 2150) %>% 
+      ggplot() + 
+      geom_line(aes(year, value, color = experiment, group = interaction(variable, ensemble, model, experiment))) + 
+      facet_wrap('class', scales = 'free') + 
+      labs(x = 'Year', 
+           y = 'Heat Flux Wm-2', 
+           title = model)
+  }) ->
+  heatflux_plots
+
+invisible(lapply(heatflux_plots, print))
+
+```
+
+
+## Save Output
+
+Save a copy of the tas results. 
+```{r}
+write.csv(heatflux_data, file = file.path(OUT_DIR, '1B.heatflux_quality.csv'))
+```
+
