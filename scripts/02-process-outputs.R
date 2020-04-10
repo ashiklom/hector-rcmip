@@ -5,7 +5,9 @@ conflictRules("testthat", exclude = c("matches", "is_null", "equals",
                                       "not", "is_less_than"))
 
 library(drake, exclude = c("gather", "expand"))
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 library(here)
 library(glue, exclude = "collapse")
 library(fs)
