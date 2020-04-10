@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "3.6.2",
+    "Version": "3.6.3",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -427,12 +427,12 @@
       "Version": "2.5.0",
       "Source": "GitHub",
       "RemoteType": "github",
+      "RemoteHost": "api.github.com",
       "RemoteUsername": "ashiklom",
       "RemoteRepo": "hector",
-      "RemoteRef": "rmcip-new",
-      "RemoteSha": "cb2539c1a25cfaf5367ea0c72c2be48bd3ca68bd",
-      "RemoteHost": "api.github.com",
-      "Hash": "2a75c2ee0060fc6fad3ba38d4841b503"
+      "RemoteRef": "rcmip-revisions",
+      "RemoteSha": "98e3f63fc54ab579e28d78b0884e59205eb1b7a6",
+      "Hash": "9890a4a9984e2601e514fb73157f172c"
     },
     "hectortools": {
       "Package": "hectortools",
@@ -539,10 +539,10 @@
     },
     "lattice": {
       "Package": "lattice",
-      "Version": "0.20-38",
+      "Version": "0.20-41",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "848f8c593fd1050371042d18d152e3d7"
+      "Hash": "fbd9285028b0263d76d18c95ae51a53d"
     },
     "lazyeval": {
       "Package": "lazyeval",
