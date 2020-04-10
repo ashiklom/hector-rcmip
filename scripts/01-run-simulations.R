@@ -33,7 +33,7 @@ if (!file.exists(rcmip_infile)) generate_rcmip_inputs()
 
 read_probability_scenario <- function(scenario_files) {
   .datatable.aware <- TRUE
-  outdir = path(
+  outdir <- path(
     "output", "zz-raw-output",
     "probability-processed"
   )
