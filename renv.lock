@@ -430,9 +430,9 @@
       "RemoteUsername": "ashiklom",
       "RemoteRepo": "hector",
       "RemoteRef": "rcmip-revisions",
-      "RemoteSha": "3903752b5f70564743f7abcc0bc7e1abf16477e2",
+      "RemoteSha": "898480f6b2585bc2fd3fdf4eccdbd7c05710e835",
       "RemoteHost": "api.github.com",
-      "Hash": "c8bf280d4f7241862c7f3e1b3fec6cde"
+      "Hash": "d49e63335ec70269d868456d5bdc70df"
     },
     "hectortools": {
       "Package": "hectortools",
