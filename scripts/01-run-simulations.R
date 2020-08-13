@@ -23,7 +23,7 @@ scenarios <- c(
   "piControl", "esm-piControl", "1pctCO2", "1pctCO2-4xext",
   "abrupt-4xCO2", "abrupt-2xCO2", "abrupt-0p5xCO2",
   "historical", "historical-cmip5",
-  "ssp119", "ssp585",
+  "ssp119", "ssp585", "ssp126", "ssp245", "ssp370", "ssp434", "ssp460",
   paste0("rcp", c("26", "45", "60", "85"))
 )
 models <- c(cmip6_params()[["model"]], "default")
@@ -58,32 +58,33 @@ plan <- drake_plan(
   out_files = target(
     run_scenario(scenario, model),
     transform = cross(scenario = !!scenarios, model = !!models)
-  ),
-  # Probability runs
-  probability_params = read_csv(file_in(
-    "data-raw/brick-posteriors/emissions_17k_posteriorSamples.csv"
-  ), col_types = cols(.default = "d")),
-  isamps = sample.int(nrow(probability_params), 1000),
-  probability_param_draws = probability_params[isamps, ],
-  dscenarios = scenarios,
-  probability_run = target(
-    run_with_param(
-      scenario,
-      probability_param_draws[["S.temperature"]],
-      probability_param_draws[["diff.temperature"]],
-      probability_param_draws[["alpha.temperature"]],
-      isamp = isamps
-    ),
-    dynamic = map(probability_param_draws, isamps),
-    transform = map(scenario = !!scenarios, .id = scenario)
-  ),
-  probability_processed = target(
-    read_probability_scenario(probability_run),
-    transform = map(probability_run),
-    # Without this, we run out of memory when trying to read multiple files
-    # Might be able to get around it on beefier systems
-    hpc = FALSE
   )
+  # ,
+  # # Probability runs
+  # probability_params = read_csv(file_in(
+  #   "data-raw/brick-posteriors/emissions_17k_posteriorSamples.csv"
+  # ), col_types = cols(.default = "d")),
+  # isamps = sample.int(nrow(probability_params), 1000),
+  # probability_param_draws = probability_params[isamps, ],
+  # dscenarios = scenarios,
+  # probability_run = target(
+  #   run_with_param(
+  #     scenario,
+  #     probability_param_draws[["S.temperature"]],
+  #     probability_param_draws[["diff.temperature"]],
+  #     probability_param_draws[["alpha.temperature"]],
+  #     isamp = isamps
+  #   ),
+  #   dynamic = map(probability_param_draws, isamps),
+  #   transform = map(scenario = !!scenarios, .id = scenario)
+  # ),
+  # probability_processed = target(
+  #   read_probability_scenario(probability_run),
+  #   transform = map(probability_run),
+  #   # Without this, we run out of memory when trying to read multiple files
+  #   # Might be able to get around it on beefier systems
+  #   hpc = FALSE
+  # )
 )
 
 ### Make plan

@@ -3,7 +3,7 @@ library(fs)
 library(here)
 requireNamespace("fst", quietly = TRUE)
 
-protocol_version <- "3-1-0"
+protocol_version <- "4-0-0"
 
 ## dir_ls(here("data-raw"))
 
@@ -31,19 +31,19 @@ emiss_long <- here(
     names_ptypes = list(year = numeric())
   )
 
-rf_long <- here(
-  "data-raw",
-  sprintf("rcmip-radiative-forcing-annual-means-v%s.csv", protocol_version)
-) %>%
-  read_csv() %>%
-  pivot_longer(
-    matches("[[:digit:]]{4}"),
-    names_to = "year",
-    values_to = "value",
-    names_ptypes = list(year = numeric())
-  )
+#rf_long <- here(
+#  "data-raw",
+#  sprintf("rcmip-radiative-forcing-annual-means-v%s.csv", protocol_version)
+#) %>%
+#  read_csv() %>%
+#  pivot_longer(
+#    matches("[[:digit:]]{4}"),
+#    names_to = "year",
+#    values_to = "value",
+#    names_ptypes = list(year = numeric())
+#  )
 
-rcmip_inputs <- bind_rows(conc_long, emiss_long, rf_long)
+rcmip_inputs <- bind_rows(conc_long, emiss_long) #, rf_long)
 
 rcmip_inputs %>%
   filter(!is.na(value)) %>%

@@ -38,13 +38,13 @@ raw_output_dir <- path(outdir, "zz-raw-output")
 figdir <- dir_create(here("figures"))
 
 # Git commit hash corresponding to Hector RCMIP version
-hector_version <- "62381e7"
+hector_version <- "1d51f"
 
 scenarios <- c(
   "piControl", "esm-piControl", "1pctCO2", "1pctCO2-4xext",
   "abrupt-4xCO2", "abrupt-2xCO2", "abrupt-0p5xCO2",
   "historical", "historical-cmip5",
-  "ssp119", "ssp585",
+  "ssp119", "ssp585", "ssp126", "ssp245", "ssp370", "ssp434", "ssp460",
   paste0("rcp", c("26", "45", "60", "85"))
 )
 
@@ -326,7 +326,7 @@ scenario_plot <- function(dat, scenario) {
 plan <- bind_plans(plan, drake_plan(
   diagnostic_plots = {
     pdf(file_out("figures/final-scenario-plots.pdf"), width = 16, height = 9.5)
-    walk(scenarios, scenario_plot, dat = your_data_csv)
+    purrr::walk(scenarios, scenario_plot, dat = your_data_csv)
     dev.off()
   }
 ))
