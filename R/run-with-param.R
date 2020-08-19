@@ -48,8 +48,8 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
   )
   hector::setvar(
     core, NA,
-    hector::AERO_SCALE(), palpha,
-    hector::getunits(hector::AERO_SCALE())
+    hector::VOLCANIC_SCALE(), palpha,
+    hector::getunits(hector::VOLCANIC_SCALE())
   )
   hector::run(core, maxdate)
   if (is.null(isamp)) isamp <- uuid::UUIDgenerate()
@@ -63,7 +63,7 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
   if (include_params) {
     write_output(core, outfile, param_ecs = pS,
                  param_diffusivity = pdiff,
-                 param_aerscl = palpha,
+                 param_volscl = palpha,
                  isamp = isamp,
                  ...)
   } else {
