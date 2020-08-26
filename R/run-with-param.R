@@ -18,7 +18,8 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
                            dates = 1750:2100,
                            include_params = TRUE,
                            .pb = NULL,
-                           isamp = NULL, ...) {
+                           isamp = NULL, 
+                           outfile = NULL, ...) {
 
   if (!is.null(.pb)) .pb$tick()
 
@@ -46,19 +47,19 @@ run_with_param <- function(scenario, pS, pdiff, palpha,
     hector::DIFFUSIVITY(), pdiff,
     hector::getunits(hector::DIFFUSIVITY())
   )
-  hector::setvar(
-    core, NA,
-    hector::VOLCANIC_SCALE(), palpha,
-    hector::getunits(hector::VOLCANIC_SCALE())
-  )
+
   hector::run(core, maxdate)
   if (is.null(isamp)) isamp <- uuid::UUIDgenerate()
+  
+  if(is.null(outfile)){
   outfile <- file.path(
     "output", "zz-raw-output",
     "probability",
     scenario,
     paste0(isamp, ".csv")
   )
+  }
+  
   dir.create(dirname(outfile), showWarnings = FALSE, recursive = TRUE)
   if (include_params) {
     write_output(core, outfile, param_ecs = pS,
