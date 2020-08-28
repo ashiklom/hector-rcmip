@@ -6,6 +6,7 @@
 ^figures/
 ^logs/
 ^output/
+!^output/rcmipII/netcdfs
 ^scratch/
 ^scripts/
 ^.*\.Rproj$
