@@ -1,10 +1,6 @@
-# Run Hector 10,000 times using parameters from the UI calibration for the different RCMIP II scenarios. 
-# Running Hector this many times can take a while and the files written out can take up a lot 
-# of space. 
-#
-# The output can end up taking a lot of disk space, users will most likely be limited to 
-# running and processing a single scenario at a time and may even need to write out to
-# an external hard drive. 
+# Run Hector 10,000 times using parameters from the UI calibration for the different RCMIP II scenarios
+# using the hector-rcmip package can take a while and can use a lot of disk space. 
+# So unfortunately this script can only be run for a single scenario at a time. 
 
 # 0. Set Up --------------------------------------------------------------------------------------
 # Load the correct version of the different R package dependencies. 
@@ -12,10 +8,7 @@ renv::restore()
 # Load the hector rcmip package to be able to use the run scneario functions and so on.
 devtools::load_all() 
 
-## Techincally this R script can be run on a local machine, however because of the limited 
-## diskspace we ended up having to read and write files out to an external hard drive. 
-#OUT_DIR <- here::here('output', 'rcmipII', 'raw-ensemble'); dir.create(OUT_DIR, showWarnings = FALSE)
-#OUT_DIR <- '/Volumes/KDBackup/rcmipII'
+OUT_DIR <- here::here('output', 'rcmipII', 'raw-ensemble'); dir.create(OUT_DIR, showWarnings = FALSE)
 assertthat::assert_that(dir.exists(OUT_DIR))
 
 # 1. Import Parameter Combinations and Run Hector  -----------------------------------------------
@@ -26,9 +19,9 @@ names(posterior) <- c('S', 'diff', 'alpha')
 posterior$ensemble_member <- 0:(nrow(posterior) - 1)
 posterior$ensemble_member <- sprintf(paste0('%0', nchar(max(posterior$ensemble_member)), 'd' ), posterior$ensemble_member )
 
-# All the scenarios to run. 
-# c("1pctCO2" #, "abrupt-4xCO2", "abrupt-2xCO2", "ssp119", "ssp126", "ssp585", "ssp370", "ssp434", "ssp460")
-scenarios <- "ssp370"
+# List of scnearios 
+# "1pctCO2" #, "abrupt-4xCO2", "abrupt-2xCO2", "ssp119", "ssp126", "ssp585", "ssp370", "ssp434", "ssp460"
+scenarios <- "XXX"
 
 # Define a function that can run an ensemble of Hector 
 #

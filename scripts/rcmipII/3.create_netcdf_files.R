@@ -16,9 +16,8 @@ OUT_DIR  <-  here::here('output', 'rcmipII', 'netcdfs'); dir.create(OUT_DIR, sho
 
 # 1. Import Scenario Data -----------------------------------------------------------------------
 # Select the specific scenario to process. 
-files <- list.files(DATA_DIR, full.names = TRUE)
+files <- list.files(DATA_DIR, pattern = '_subset_hector.csv', full.names = TRUE)
 
-files <- files[grepl(pattern = 'ssp460', x = files)]
 # 2. Create the Netcdf File ----------------------------------------------------------------------
 lapply(files, function(file){
   
@@ -34,30 +33,19 @@ lapply(files, function(file){
 
   # Set up the dimensions of the netcdf file
   dim_time <- ncdim_def('time', 'year', as.double(time_years))
-  dim_scneario <- ncdim_def("scenario", "", vals = 1, create_dimvar=FALSE )
-  ncdim_def("nchar", "", 1:12, create_dimvar=FALSE )
- # dim_scenario <- ncdim_def(name = 'scenario', units = scn_name, vals = 'cd')
- # dim_scenario <- ncdim_def("nchar", "", 1, create_dimvar=FALSE )
   dim_ensemble_member <- ncdim_def('ensemble_member',  units = 'ensemble_member', vals = as.integer(ensmble_members))
-  dimnchar <- ncdim_def("nchar", "", 1:2, create_dimvar=FALSE)
-  
-  # define variables
-  fillvalue <- NA
-  
-  tgav <- ncvar_def(name = "Surface Air Temperature Change", units =  "degC",  dim = list(dim_time, dim_ensemble_member, dim_scenario))
-  ftot <- ncvar_def(name = "Effective Radiative Forcing", units =  "W/m2", dim = list(dim_time, dim_ensemble_member, dim_scenario))
-  fco2 <- ncvar_def(name = "Effective Radiative Forcing|Anthropogenic|CO2", units =  "W/m2", dim = list(dim_time, dim_ensemble_member, dim_scenario))
-  
-  # Required as columns by RCMIP II 
-  mname <- ncvar_def(name = "model", units = '', create_dimvar=FALSE)
-  munit <- ncvar_def(name = "unit", units = 'character', dim = list(dim_ensemble_member, dim_scenario))
+
+  # Define variables
+  tgav <- ncvar_def(name = "Surface Air Temperature Change", units =  "K",  dim = list(dim_time, dim_ensemble_member))
+  ftot <- ncvar_def(name = "Effective Radiative Forcing", units =  "W/m^2", dim = list(dim_time, dim_ensemble_member))
+  fco2 <- ncvar_def(name = "Effective Radiative Forcing|Anthropogenic|CO2", units =  "W/m^2", dim = list(dim_time, dim_ensemble_member))
   
   # create netCDF file and put arrays, but first make sure that the 
   # netcdf does not exist, if the ncdf4 commands try to manipulate 
   # or overwrite a nc the resulting nc will be corrupt.  
   nc_name <- file.path(OUT_DIR, paste0('rcmipII-', scn_name, '.nc'))
   if(file.exists(nc_name)){ file.remove(nc_name) }
-  ncnew <- nc_create(nc_name,list(tgav,ftot,fco2, mname, munit, varcolors),force_v4=TRUE)
+  ncnew <- nc_create(nc_name,list(tgav,ftot,fco2),force_v4=TRUE)
   
   
   # Save the arrays of data. 
@@ -100,25 +88,12 @@ lapply(files, function(file){
   ncatt_put(ncnew, "Effective Radiative Forcing", attname = '_is_metadata', attval = 0)
   ncatt_put(ncnew, "Effective Radiative Forcing|Anthropogenic|CO2", attname = '_is_metadata', attval = 0)
   
-  # Add the RCMIP II required columns, the examples don't really make sense but needed to pass the 
-  # validation tests. 
-  model <- array('hector', dim  = length(ensmble_members) * length(scn_name))
-  ncvar_put(ncnew, "model", vals  = model)
-  ncatt_put(ncnew, "model", attname = '_is_metadata', attval = 1)
-  
-  ncvar_put(ncnew, "unit", vals  = model)
-  ncatt_put(ncnew, "unit", attname = '_is_metadata', attval = 1)
-  
-  # Put additional attributes into dimension and data variables
-  ncatt_put(ncout,"lon","axis","X") 
-  ncatt_put(ncout,"lat","axis","Y")
-  ncatt_put(ncout,"time","axis","T")  
-
   # Add global attributes 
   ncatt_put(ncnew,  0, "created_at", as.character(Sys.time()))
-  ncatt_put(ncnew, 0, "_scmdata_version", system('git describe', intern = TRUE))
-
-
+  ncatt_put(ncnew, 0, "_scmdata_version", substr(start = 1,  stop = 6, x = system('git describe', intern = TRUE)))
+  ncatt_put(ncnew, 0, "scenario", scn_name)
+  ncatt_put(ncnew, 0, "model", 'hector')
+  
   # Save the netcdf file. 
   nc_close(ncnew)
   
@@ -126,5 +101,12 @@ lapply(files, function(file){
 })
 
 
+# 3. Format the nc files using python ------------------------------------------------------------
+# The python and R ncdf4 packages are different from one another. The pyrcmip package used to 
+# submit the RCMIP results depends on the netcdfs being consistent with the python ncdf4 pacakge. 
+# Using the 3A.func_format_rcmipII_nc.py script reformat the netcdf files. 
+file <- here::here('scripts', 'rcmipII',  '0.func_format_rcmipII_nc.py')
+assertthat::assert_that(file.exists(file))
 
+system2('python3', args = file)
 

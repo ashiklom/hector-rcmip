@@ -21,14 +21,17 @@ pyrcmip_template <- read.csv(url('https://gitlab.com/rcmip/pyrcmip/-/raw/master/
 # Create a data frame with the dimensions of the ensemble. 
 hector_pyrcmip  <- matrix(nrow = nrow(posterior), ncol = ncol(pyrcmip_template))
 hector_pyrcmip <- as.data.frame(hector_pyrcmip) 
-names(hector_pyrcmip) <- gsub(pattern = '.', replacement = ' ', x = names(pyrcmip_template))
+names(hector_pyrcmip) <- names(pyrcmip_template)
+
+# Replace the RCMIP name 
+names(hector_pyrcmip)[names(hector_pyrcmip) == 'RCMIP.name'] <- 'RCMIP name'
 
 # Fill out the pyrcmip metrics data table. 
-hector_pyrcmip$unit <- getunits(ECS())
+hector_pyrcmip$unit <- 'K'
 hector_pyrcmip$value <- posterior$S
 hector_pyrcmip$ensemble_member <- 0:(nrow(hector_pyrcmip) - 1)
 hector_pyrcmip$climate_model <- 'hector'
-hector_pyrcmip$'RCMIP name' <- unique(pyrcmip_template$'RCMIP name')
+hector_pyrcmip$`RCMIP name` <- 'Equilibrium Climate Sensitivity'
 
 # Save the csv file. 
 write.csv(x = hector_pyrcmip, file = file.path(OUT_DIR, 'rcmip_model_reported_metrics_test.csv'), row.names = FALSE)
