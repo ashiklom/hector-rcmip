@@ -31,7 +31,7 @@ if __name__ == "__main__":
     root_dir = "/Users/dorh012/Documents/2020/hector-rcmip/output/rcmipII/netcdfs"
 
     scenarios = [
-       "1pctCO2", "ssp370",  "abrupt-2xCO2", "abrupt-4xCO2", "ssp119", "ssp126", "ssp434", "ssp460", "ssp585"
+       "1pctCO2", "ssp370",  "abrupt-2xCO2", "abrupt-4xCO2", "ssp119", "ssp126", "ssp434", "ssp460", "ssp585", "ssp245"
     ]
 
     for sce in tqdm.tqdm(scenarios):
