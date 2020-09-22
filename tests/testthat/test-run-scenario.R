@@ -40,7 +40,7 @@ test_that("Cores set up properly",{
   temp_RMSE <- mean((temp_comp_data$rcmip - temp_comp_data$hector)^2)
   
   # Make sure that the results are within each other for some threshold. 
-  # Make sure that the temp results are within 0.001 deg C of one anohter. 
+  # Make sure that the temp results are within 0.005 deg C of one anohter. 
   temp_threshold <- 0.001
   testthat::expect_true(temp_RMSE < temp_threshold)
   

@@ -45,7 +45,7 @@ read_probability_scenario <- function(scenario_files) {
   scenariofile <- fs::path(outdir, paste0(scenario, ".fst"))
   fst::write_fst(values, scenariofile)
   rm(values)
-  params <- unique(dat[, .(isamp, param_ecs, param_diffusivity, param_aerscl)])
+  params <- unique(dat[, .(isamp, param_ecs, param_diffusivity, param_volscl)])
   rm(dat)
   paramfile <- fs::path(outdir, paste0("params.", scenario, ".fst"))
   fst::write_fst(params, paramfile)

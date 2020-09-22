@@ -1,0 +1,129 @@
+---
+title: "Taking A Look at RCMIP II Hector Results"
+author: "Kalyn Dorheim"
+date: "9/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo = FALSE, message = FALSE}
+BASE_DIR <- here::here()
+OUT_DIR  <- file.path(BASE_DIR, 'output', 'rcmipII', 'netcdfs')
+knitr::opts_chunk$set(echo = TRUE,  fig.width = 8, fig.height = 5)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(ncdf4)
+library(data.table)
+
+nc_files <- list.files(OUT_DIR, 'convert', full.names = TRUE)
+```
+
+
+Let's take a look at what the netcdf file looks like. 
+
+```{r}
+nc <- nc_open(nc_files[[1]])
+nc 
+nc_close(nc)
+```
+
+Define a function that will extract and format the different data sets in prepration for plotting results. 
+
+```{r}
+lapply(nc_files, function(f){
+  
+  nc <- nc_open(f)
+  
+  ensemble <- as.character(0:9999)
+  time     <- 1750:2100 # we know that this is going to be the time but we will only want to keep a subset of them
+  yr_to_keep <- floor(seq(from=min(time), to=max(time), length.out = 50)) 
+  
+  vars <- c('Surface Air Temperature Change', 'Surface Air Ocean Blended Temperature Change', 
+            'Effective Radiative Forcing|Anthropogenic|Aerosols')
+  
+  lapply(vars, function(v){
+    
+    var_output <- as.data.table(ncvar_get(nc, v))
+    names(var_output) <- ensemble
+    var_output[['time']] <- time
+    var_output <- var_output[time %in% yr_to_keep, ]
+    
+    long <- melt(var_output, id.vars = 'time', variable.name = 'ensemble', value.name = 'value')
+    long[['variable']] <- v
+    
+    return(long)
+    
+  }) %>%  
+    dplyr::bind_rows()-> 
+    data
+  
+  data$scenario <- ncatt_get(nc, 0)$scenario
+  
+  return(data)
+  
+  
+}) %>% 
+  dplyr::bind_rows() ->
+  data
+```
+
+
+```{r}
+to_plot <- data[ , .("min" = min(value), "max" = max(value), "mean" = mean(value)), by = c("variable", "scenario", "time")]
+```
+
+## Plots
+
+The  ribbon is the min/max hector results the dark black line is the Hector ensemble mean. 
+
+```{r}
+vars <- unique(to_plot$variable)
+plot_list <- list()
+for(v in vars){
+  
+  ggplot(data = to_plot[variable == v, ] ) + 
+    geom_ribbon(aes(x = time, ymin = min, ymax = max),alpha = 0.5) +
+    geom_line(aes(x = time, y=mean),size =2) +
+    facet_wrap('scenario', scales= 'free') + 
+    labs(title = paste0('RCMIP  II: ', v)) -> 
+    plot
+  
+  plot_list[[v]] <- plot
+  
+}
+```
+
+
+```{r}
+plot_list$`Surface Air Temperature Change`
+```
+
+
+```{r}
+plot_list$`Surface Air Ocean Blended Temperature Change`
+```
+
+
+Let's compare the two different types of temperature. 
+
+
+```{r, fig.width = 8, fig.height = 5}
+ ggplot(data = to_plot[variable %in% c('Surface Air Temperature Change',
+                                       'Surface Air Ocean Blended Temperature Change' ), ] ) + 
+    geom_ribbon(aes(x = time, ymin = min, ymax = max, fill = variable, color = variable),alpha = 0.5) +
+    geom_line(aes(x = time, y=mean, color = variable)) +
+    facet_wrap('scenario', scales = 'free') + 
+    labs(title = paste0('RCMIP  II: ', v)) -> 
+    plot
+  plot 
+```
+
+
+As we expected the mean surface temperature is cooler than the mean air temperature, and this difference is more pronounced in the future/higher $CO_2$ scenarios. 
+
+
+```{r}
+plot_list$`Effective Radiative Forcing|Anthropogenic|Aerosols`
+```
+
+It makes snese that there is no uncertainty in the 1pctCO2, abrupt2xCO2 and the abrupt4xCO2 runs because they aren't actually driven with aerosols. 

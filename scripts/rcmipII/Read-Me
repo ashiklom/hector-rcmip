@@ -1,0 +1,31 @@
+READ ME 
+
+For the second phase of the RCMIP we used the posterior results from the UI mcmc calibration 
+of Hector. The scripts here run Hector a total of 90,000 times format these results into 
+the submission netcdf format and the meta csv files. 
+
+Scripts 
+  * 0.func_format_rcmipII_nc.py - a script provided by Jared Lewis that takes the R defined ncdf4 format and 
+      transforms it into the python formatted ncdf4 strucutre. 
+  * 1.run_hector_ensemble.R - the script that runs hector 10,000 times for a single scneario
+  * 2.post_processing.R - the script that selects the outputs relevant to RCMIP II 
+  * 3.create_netcdf_files.R - make the netcdf files
+  * 4.create-rcmip-meta_model_information.R / 4.create-rcmip_model_reporeted_metircs.R - create the model meta              files.
+  
+  
+  Instructions : so it is unideal, but due to time constraints, staff allocation, and existing software here 
+  we are. 
+ 
+Instructions:  
+* For each scenario run scripts 1 and 2 individually for each scenario, note you will need to specify the senario to process. 
+* Then source the L3 script, this will produce the pyrcmip netcdf files for all of the scenarios. 
+* Run the L4 scripts to prepare the meta data for the project. 
+
+After the final netcdf files are generated you will want to validate them with the rcmip validate command, after 
+they pass upload them to rcmip with the upload command. 
+
+
+  
+  
+  
+  

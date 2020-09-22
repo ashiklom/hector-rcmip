@@ -7,7 +7,7 @@
 #' @export
 rcmip_inputs <- function(targetfile = NULL) {
   if (is.null(targetfile)) {
-    targetfile <- here::here("inst", "rcmip-inputs.fst")
+      targetfile <- here::here("inst", "rcmip-inputs.fst")
   }
   stopifnot(file.exists(targetfile))
   fst::read_fst(targetfile) %>%

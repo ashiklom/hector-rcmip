@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "3.6.2",
+    "Version": "3.6.3",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -427,12 +427,12 @@
       "Version": "2.5.0",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "ashiklom",
+      "RemoteUsername": "kdorheim",
       "RemoteRepo": "hector",
-      "RemoteRef": "rmcip-new",
-      "RemoteSha": "cb2539c1a25cfaf5367ea0c72c2be48bd3ca68bd",
+      "RemoteRef": "rcmipII",
+      "RemoteSha": "478372ef3213d1e1cecfa17c172bf674623a740b",
       "RemoteHost": "api.github.com",
-      "Hash": "2a75c2ee0060fc6fad3ba38d4841b503"
+      "Hash": "2660dc9d40407d68b41c82e07cbc9d52"
     },
     "hectortools": {
       "Package": "hectortools",
@@ -627,6 +627,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b275f9d21e812b6338f4c3e9d70b2209"
+    },
+    "ncdf4": {
+      "Package": "ncdf4",
+      "Version": "1.17",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5c1c0231b12b3d54cf619a3e5e36d229"
     },
     "nlme": {
       "Package": "nlme",
